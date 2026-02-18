@@ -1,0 +1,10 @@
+*
+!*/
+!Makefile
+!.gitignore
+!Dockerfile
+!docker-compose.yml
+
+!*.c
+!*.h
+!*.md
