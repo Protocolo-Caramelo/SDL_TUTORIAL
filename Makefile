@@ -4,6 +4,7 @@ CLIBS = `sdl2-config --libs --cflags` -ggdb3 -lSDL2_image -lm
 
 SRC_C = \
 		.
+SRC_O = bin
 SRC_H = \
 		.
 
@@ -13,7 +14,7 @@ SRC_C_PATH = $(foreach \
 			 $(SRC_C), \
 			 $(shell find $(wrd) -type f -name "*.c") \
 			 )
-SRC_O_PATH = $(SRC_C_PATH:%.c=%.o)
+SRC_O_PATH = $(SRC_C_PATH:%.c=$(SRC_O)/%.o)
 SRC_H_PATH = $(foreach \
 			 wrd, \
 			 $(SRC_H), \
@@ -23,9 +24,11 @@ SRC_H_PATH = $(foreach \
 EXEC = main
 
 # all:
-# 	echo $(SRC_C_PATH)
-# 	echo $(SRC_O_PATH)
-# 	echo $(SRC_H_PATH)
+# 	echo ^$(SRC_C_PATH)$
+# 	echo
+# 	echo ^$(SRC_O_PATH)$
+# 	echo
+# 	echo ^$(SRC_H_PATH)$
 # 
 
 all: $(EXEC)
@@ -33,8 +36,11 @@ all: $(EXEC)
 $(EXEC): $(SRC_O_PATH)
 	$(CC) -o $(EXEC) $(CFLAGS) $(SRC_H_PATH) $^ $(CLIBS)
 
-$(SRC_O_PATH): %.o: %.c
+$(SRC_O_PATH): $(SRC_O)/%.o :%.c
+	@mkdir -p $(dir $@)
 	$(CC) -c $^ $(CFLAGS) $(SRC_H_PATH) -o $@ $(CLIBS)
 
+
 clean:
-	rm -f $(SRC_O_PATH) $(EXEC)
+	rm -f $(EXEC)
+	rm -rf $(SRC_O)

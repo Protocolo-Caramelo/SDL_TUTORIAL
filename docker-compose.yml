@@ -1,5 +1,5 @@
 services:
-  hello_sdl:
+  sdl_tutorial:
     build: .
     image: "sdl_tutorial:latest"
     volumes:
