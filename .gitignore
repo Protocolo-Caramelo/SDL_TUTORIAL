@@ -3,8 +3,9 @@
 !Makefile
 !.gitignore
 !Dockerfile
-!docker-compose.yml
+!docker-compose*.yml
 
 !*.c
 !*.h
 !*.md
+!*.sh

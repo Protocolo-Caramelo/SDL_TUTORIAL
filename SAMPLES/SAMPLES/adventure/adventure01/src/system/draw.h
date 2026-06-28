@@ -1,0 +1,8 @@
+/*
+ * Copyright (C) 2021-2022 Parallel Realities. All rights reserved.
+ */
+
+void prepareScene(void);
+void presentScene(void);
+void blit(SDL_Texture *texture, int x, int y, int center);
+void blitAtlasImage(AtlasImage *atlasImage, int x, int y, int center, SDL_RendererFlip flip);

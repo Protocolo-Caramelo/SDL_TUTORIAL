@@ -1,0 +1,143 @@
+/*
+ * Copyright (C) 2023 Parallel Realities. All rights reserved.
+ */
+
+#include <SDL2/SDL_image.h>
+#include <SDL2/SDL_mixer.h>
+#include <SDL2/SDL_ttf.h>
+#include <time.h>
+
+#include "../common.h"
+
+#include "../game/entityFactory.h"
+#include "atlas.h"
+#include "draw.h"
+#include "lookup.h"
+#include "sound.h"
+#include "textures.h"
+#include "widgets.h"
+
+static void initConfig(void);
+
+extern App app;
+
+void initSDL(void)
+{
+	int rendererFlags, windowFlags;
+
+	rendererFlags = SDL_RENDERER_ACCELERATED;
+
+	windowFlags = 0;
+
+	if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_JOYSTICK) < 0)
+	{
+		printf("Couldn't initialize SDL: %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	if (Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 1024) == -1)
+	{
+		printf("Couldn't initialize SDL Mixer\n");
+		exit(1);
+	}
+
+	Mix_AllocateChannels(MAX_SND_CHANNELS);
+
+	app.window = SDL_CreateWindow("SDL2 Shooter III 01", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, windowFlags);
+
+	SDL_SetHint(SDL_HINT_RENDER_SCALE_QUALITY, "nearest");
+
+	app.renderer = SDL_CreateRenderer(app.window, -1, rendererFlags);
+
+	IMG_Init(IMG_INIT_PNG | IMG_INIT_JPG);
+
+	if (TTF_Init() < 0)
+	{
+		printf("Couldn't initialize SDL TTF: %s\n", SDL_GetError());
+		exit(1);
+	}
+
+	SDL_ShowCursor(0);
+}
+
+static void initJoypad(void)
+{
+	int i, n;
+
+	n = SDL_NumJoysticks();
+
+	SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "%d joysticks available", n);
+
+	for (i = 0; i < n; i++)
+	{
+		app.joypad = SDL_JoystickOpen(i);
+
+		if (app.joypad != NULL)
+		{
+			SDL_LogMessage(SDL_LOG_CATEGORY_APPLICATION, SDL_LOG_PRIORITY_INFO, "Joystick [name='%s', Axes=%d, Buttons=%d]", SDL_JoystickNameForIndex(i), SDL_JoystickNumAxes(app.joypad), SDL_JoystickNumButtons(app.joypad));
+
+			return;
+		}
+	}
+}
+
+void initGameSystem(void)
+{
+	srand(time(NULL));
+
+	initJoypad();
+
+	initLookups();
+
+	initAtlas();
+
+	initSound();
+
+	initWidgets();
+
+	initTextures();
+
+	initDraw();
+
+	initEntityFactory();
+
+	initConfig();
+}
+
+static void initConfig(void)
+{
+	int i;
+
+	app.config.keyControls[CONTROL_LEFT] = SDL_SCANCODE_A;
+	app.config.keyControls[CONTROL_RIGHT] = SDL_SCANCODE_D;
+	app.config.keyControls[CONTROL_UP] = SDL_SCANCODE_W;
+	app.config.keyControls[CONTROL_DOWN] = SDL_SCANCODE_S;
+	app.config.keyControls[CONTROL_FIRE] = SDL_SCANCODE_J;
+	app.config.keyControls[CONTROL_SECONDARY] = SDL_SCANCODE_I;
+	app.config.keyControls[CONTROL_PAUSE] = SDL_SCANCODE_TAB;
+
+	for (i = 0; i < CONTROL_MAX; i++)
+	{
+		app.config.joypadControls[i] = -1;
+	}
+
+	app.config.deadzone = 3200;
+
+	app.config.soundVolume = MIX_MAX_VOLUME;
+	app.config.musicVolume = MIX_MAX_VOLUME;
+}
+
+void cleanup(void)
+{
+	Mix_Quit();
+
+	IMG_Quit();
+
+	TTF_Quit();
+
+	SDL_DestroyRenderer(app.renderer);
+
+	SDL_DestroyWindow(app.window);
+
+	SDL_Quit();
+}
