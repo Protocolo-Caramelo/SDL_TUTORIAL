@@ -1,8 +1,10 @@
-#include<stdio.h>
+#include<graphical_win.h>
+#include"app.h"
 
 //
 int main()
 {
-    printf("HELLO WOLRD!\n");
+    doApp();
+
     return 0;
 }
