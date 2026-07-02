@@ -1,0 +1,10 @@
+{
+    "version": 4,
+    "configurePresets":
+    [
+        {
+            "name": "win",
+            "binaryDir": "${sourceDir}/build"
+        }
+    ]
+}
