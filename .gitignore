@@ -1,6 +1,6 @@
 *
 !*/
-!Makefile
+/**/build/**
 !.gitignore
 !Dockerfile
 !docker-compose*.yml

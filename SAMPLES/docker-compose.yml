@@ -2,7 +2,7 @@ services:
   sdlTutorial_samples:
     build: .
 
-    image: "hello_sdl:latest"
+    image: "sdltutorial_samples:latest"
     volumes:
       - ./SAMPLES:/SAMPLES
 
