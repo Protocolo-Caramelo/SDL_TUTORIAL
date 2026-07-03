@@ -1,5 +1,5 @@
 Project (shooter2-01)
-CMake_Minimum_Required (VERSION 3.1)
+CMake_Minimum_Required (VERSION 3.5)
 
 include(FindPkgConfig)
 pkg_search_module(SDL2 REQUIRED sdl2)

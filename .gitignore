@@ -1,11 +1,14 @@
 *
 !*/
 /**/build/**
+
 !.gitignore
 !Dockerfile
 !docker-compose*.yml
 !CMakeLists.txt
 !CMakePresets.json
+
+!/**/assets/**
 
 !*.c
 !*.h
