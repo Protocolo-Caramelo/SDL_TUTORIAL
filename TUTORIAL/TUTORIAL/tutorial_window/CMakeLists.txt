@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.2.3)
-project(SDLWindow)
+project(window)
 
 find_package(SDL2 REQUIRED)
 
