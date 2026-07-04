@@ -1,22 +1,11 @@
 #include<GWindow.h>
 
-void Window_renderer_def(Window*w, SDL_Renderer*r)
+SDL_Renderer **Window_renderer(const Window*w)
 {
-    w->renderer = r;
+    return &w->renderer;
 }
 
-void Window_raw_def(Window*w, SDL_Window*win)
+SDL_Window **Window_raw(const Window*w)
 {
-    w->window = win;
-}
-
-
-SDL_Renderer *Window_renderer(const Window*w)
-{
-    return w->renderer;
-}
-
-SDL_Window *Window_raw(const Window*w)
-{
-    return w->window;
+    return &w->window;
 }

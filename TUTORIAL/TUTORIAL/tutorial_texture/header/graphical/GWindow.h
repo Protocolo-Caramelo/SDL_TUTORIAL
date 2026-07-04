@@ -9,10 +9,7 @@ typedef struct {
     SDL_Window *window;
 } Window;
 
-void Window_renderer_def(Window*, SDL_Renderer*);
-void Window_raw_def(Window*, SDL_Window*);
-
-SDL_Renderer *Window_renderer(const Window*);
-SDL_Window *Window_raw(const Window*);
+SDL_Renderer **Window_renderer(const Window*);
+SDL_Window **Window_raw(const Window*);
 
 #endif

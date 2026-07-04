@@ -4,6 +4,7 @@
 #include<GInit.h>
 #include<GWindow.h>
 #include<GTexture.h>
+#include<time.h>
 
 #define APP_INIT_X SDL_WINDOWPOS_UNDEFINED
 #define APP_INIT_Y SDL_WINDOWPOS_UNDEFINED
@@ -23,17 +24,25 @@ typedef struct {
     Texture texture;
     T_COL vx;
     T_ROW vy;
-
     T_COL width;
     T_ROW height;
 } Entity;
 
-#define ENTITY_WIDTH 100
-#define ENTITY_HEIGHT 100
-#define ENTITY_INIT_X 60
-#define ENTITY_INIT_Y 60
-#define ENTITY_INIT_VX 2
-#define ENTITY_INIT_VY 1
+T_COL* Entity_x(const Entity*);
+T_ROW* Entity_y(const Entity*);
+T_COL* Entity_vx(const Entity*);
+T_ROW* Entity_vy(const Entity*);
+T_COL* Entity_width(const Entity*);
+T_ROW* Entity_height(const Entity*);
+Texture* Entity_texture(const Entity*);
+
+
+#define ENTITY_INIT_WIDTH 100
+#define ENTITY_INIT_HEIGHT 100
+#define ENTITY_INIT_X (rand() % (APP_INIT_WIDTH - ENTITY_INIT_WIDTH - 10))
+#define ENTITY_INIT_Y (rand() % (APP_INIT_HEIGHT - ENTITY_INIT_HEIGHT - 10))
+#define ENTITY_INIT_VX (rand() % 3)
+#define ENTITY_INIT_VY (rand() % 3)
 extern Entity entity;
 
 void Entity_initialize();
