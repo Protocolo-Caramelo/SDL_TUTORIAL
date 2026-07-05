@@ -74,6 +74,7 @@ void Entity_events()
     T_ROW *vy, *y, eh;
     // App window size
     int w, h;
+    int changed_direction = 0;
 
     vx = Entity_vx(&entity);
     vy = Entity_vy(&entity);
@@ -88,9 +89,15 @@ void Entity_events()
 
     if(*x + *vx + ew >= w || *x + *vx < 0){
         *vx = -*vx;
+        changed_direction = 1;
     }
     if(*y + *vy + eh >= h || *y + *vy < 0){
         *vy = -*vy;
+        changed_direction = 1;
+    }
+
+    if(changed_direction){
+        App_change_bg_color();
     }
 
     *x += *vx;

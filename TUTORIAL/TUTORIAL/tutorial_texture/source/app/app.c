@@ -23,6 +23,8 @@ void App_initialize()
         printf("Error in app renderer initialization: %s\n", SDL_GetError());
         exit(1);
     }
+
+    SDL_SetRenderDrawColor(*Window_renderer(&app), 255, 255, 255, 255);
 }
 
 void App_destroy()
@@ -48,9 +50,13 @@ void App_events()
     }
 }
 
+void App_change_bg_color()
+{
+    SDL_SetRenderDrawColor(*Window_renderer(&app), rand() % 256, rand() % 256, rand() % 256, 255);
+}
+
 void App_render()
 {
-    SDL_SetRenderDrawColor(*Window_renderer(&app), 255, 255, 0, 255);
     SDL_RenderClear(*Window_renderer(&app));
 }
 

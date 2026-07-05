@@ -17,7 +17,7 @@ extern Window app;
 void App_initialize();
 void App_destroy();
 void App_events();
-void App_render();
+void App_change_bg_color();
 
 /* */
 typedef struct {
