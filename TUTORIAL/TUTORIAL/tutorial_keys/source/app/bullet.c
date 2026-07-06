@@ -69,8 +69,7 @@ void Bullet_render(Bullet*b)
 
     // printf("%.2lf, %.2lf, %.2lf\n", angle_x, angle_y, angle);
     // printf("%.2lf %.2lf\n", angle, angle_delta);
-    // *Shot_angle(b) += angle_delta;
-    printf("%.2lf, %.2lf, %.2lf\n", *Shot_angle(b), angle, angle_delta);
+    // printf("%.2lf, %.2lf, %.2lf\n", *Shot_angle(b), angle, angle_delta);
     // /*
     *Shot_angle(b) += 
         (angle_delta == angle_delta) ? angle_delta / (100 / 16):
