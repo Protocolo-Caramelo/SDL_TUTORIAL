@@ -58,12 +58,24 @@ void Bullet_render(Bullet*b)
     }
     
     angle = RAD_TO_DEG(angle);
-    double angle_delta = BULLET_ANGLE_CHANGE_BY_ITR(*Shot_angle(b), angle);
+    double angle_delta;
+    if((angle_delta = angle - *Shot_angle(b) + 180) >= 360){
+        angle_delta -= 360;
+    }
+    if(angle_delta < 0){
+        angle_delta += 360;
+    }
+    angle_delta -= 180;
+
     // printf("%.2lf, %.2lf, %.2lf\n", angle_x, angle_y, angle);
     // printf("%.2lf %.2lf\n", angle, angle_delta);
-    *Shot_angle(b) += angle_delta;
-    printf("%.2lf\n", *Shot_angle(b));
-
+    // *Shot_angle(b) += angle_delta;
+    printf("%.2lf, %.2lf, %.2lf\n", *Shot_angle(b), angle, angle_delta);
+    // /*
+    *Shot_angle(b) += 
+        (angle_delta == angle_delta) ? angle_delta / (100 / 16):
+        0;
+    // */
 
     // Render the bullet
     SDL_Rect dest;
@@ -94,7 +106,7 @@ void Bullet_render(Bullet*b)
         *Texture_raw(t),
         NULL,
         &dest,
-        360 - *Shot_angle(b),
+        -*Shot_angle(b),
         &center,
         SDL_FLIP_HORIZONTAL
     );

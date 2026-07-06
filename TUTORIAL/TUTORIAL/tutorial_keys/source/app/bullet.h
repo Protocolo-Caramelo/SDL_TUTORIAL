@@ -25,12 +25,8 @@ extern Bullet bullet;
 void Bullet_init(Bullet*, Window*to);
 void Bullet_exit(Bullet*);
 
-#define BULLET_ROTATE_DURATION 1000 // One second
-#define BULLET_ANGLE_CHANGE_BY_ITR(angle_curr, angle_next) \
-    ( \
-      (angle_next != angle_next)? 0: \
-      (angle_next - angle_curr) / ((double)BULLET_ROTATE_DURATION / SDL_DELAY) \
-    )
+#define BULLET_ROTATE_DURATION 100 // 0.1 seconds
+#define BULLET_ROTATE_SPEED 180
 void Bullet_render(Bullet*);
 void Bullet_present(Bullet*);
 
