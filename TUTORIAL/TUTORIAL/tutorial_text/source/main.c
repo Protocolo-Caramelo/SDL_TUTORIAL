@@ -8,12 +8,15 @@ int main()
     graphical_init();
     App_init(&app);
     Guideline_init(&guideline);
+    Balls_init();
     while(1){
         App_render(&app);
+        Balls_render();
         Guideline_render(&guideline);
 
         while(SDL_PollEvent(&e)){
             App_event(&app, e);
+            Balls_event(e);
             Guideline_event(&guideline, e);
         }
 

@@ -2,7 +2,7 @@
 #define MAIN_H
 
 #include"App.h"
-#include"Ball.h"
+#include"Balls.h"
 #include"Guideline.h"
 
 #if GUIDELINE_DASHEDLINE_SPACE < GUIDELINE_DASHEDLINE_WIDTH

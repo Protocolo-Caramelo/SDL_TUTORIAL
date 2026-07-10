@@ -5,8 +5,8 @@
 #include<stdint.h>
 #include<math.h>
 
-typedef int16_t T_COL;
-typedef int16_t T_ROW;
+typedef double T_COL;
+typedef double T_ROW;
 typedef uint16_t T_WIDTH;
 typedef uint16_t T_HEIGHT;
 typedef uint32_t T_TIMESTAMP;

@@ -82,8 +82,8 @@ void GuidelineVTable_render(Guideline*g)
     SDL_SetRenderTarget(*Texture_renderer(t), target_prev);
 
     // Render the line 
-    double init_x, x;
-    double init_y, y;
+    T_COL init_x, x;
+    T_ROW init_y, y;
     double dist, angle;
 
     init_x = x = *Guideline_initX(g);
