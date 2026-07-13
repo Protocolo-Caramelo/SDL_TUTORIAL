@@ -18,6 +18,8 @@ target_link_libraries(
     PRIVATE
         graphical
         m
+        SDL2
+        SDL2_image
     )
 
 target_compile_options(

@@ -68,6 +68,9 @@ void AppVTable_event(App*app, SDL_Event e)
     switch(e.type){
         case SDL_QUIT:
             App_exit(app);
+            Guideline_exit(&guideline);
+            Balls_exit();
+
             exit(0);
             break;
 

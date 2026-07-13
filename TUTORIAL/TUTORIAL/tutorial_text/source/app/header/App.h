@@ -12,13 +12,6 @@ extern App app;
 /*
  * AppVTable methods
  */
-#define APP_INIT_WINDOW_NAME "Tutorial text"
-#define APP_INIT_WINDOW_XPOS SDL_WINDOWPOS_UNDEFINED
-#define APP_INIT_WINDOW_YPOS SDL_WINDOWPOS_UNDEFINED
-#define APP_INIT_WINDOW_WIDTH 900
-#define APP_INIT_WINDOW_HEIGHT 450
-#define APP_INIT_WINDOW_FLAGS (SDL_WINDOW_RESIZABLE)
-#define APP_INIT_RENDERER_FLAGS (SDL_RENDERER_ACCELERATED)
 void AppVTable_init(App*);
 void AppVTable_exit(App*);
 void AppVTable_render(App*);
