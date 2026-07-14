@@ -104,6 +104,10 @@ void Balls_exit();
 void Balls_render();
 void Balls_event(SDL_Event);
 
+void Balls_calculate_friction();
+void Balls_calculate_colision();
+void Balls_calculate_position();
+
 void Balls_event_keyDown(SDL_Event);
 void Balls_event_keyUp(SDL_Event);
 void Balls_event_mouseButtonDown(SDL_Event);

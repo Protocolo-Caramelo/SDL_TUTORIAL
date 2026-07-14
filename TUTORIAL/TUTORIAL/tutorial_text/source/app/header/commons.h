@@ -14,16 +14,12 @@ typedef uint16_t T_WIDTH;
 typedef uint16_t T_HEIGHT;
 typedef double T_WEIGHT;
 
-typedef uint32_t T_TIMESTAMP;
+typedef uint64_t T_TIMESTAMP;
 
 #define SDL_DELAY 16 // ms
 
 #define RAD_TO_DEG(a) (a * 180 / M_PI)
 #define DEG_TO_RAG(a) (a * M_PI / 180)
-
-#define G_FORCE 9.8 // ms/s^2
-#define G_FORCE_ITR (G_FORCE * SDL_DELAY / 1000)
-#define FRICTION_VAL 0.2
 
 /*
  * App
@@ -35,6 +31,14 @@ typedef uint32_t T_TIMESTAMP;
 #define APP_INIT_WINDOW_HEIGHT 450
 #define APP_INIT_WINDOW_FLAGS (SDL_WINDOW_RESIZABLE)
 #define APP_INIT_RENDERER_FLAGS (SDL_RENDERER_ACCELERATED)
+
+/*
+ * Physics important values
+ */
+#define G_FORCE 9.8 // ms/s^2
+#define FRICTION_VAL 0.2
+#define DELTATIME (16 / 60)
+#define ELASTIC 0.8
 
 /*
  * Ball

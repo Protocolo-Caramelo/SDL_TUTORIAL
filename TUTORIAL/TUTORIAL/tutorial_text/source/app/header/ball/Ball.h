@@ -50,7 +50,7 @@ struct Ball {
     BallType *type;
     BallState state;
     Texture texture;
-    T_TIMESTAMP timestamp_last;
+    T_TIMESTAMP timestamp;
     T_COL x, vx;
     T_ROW y, vy;
 };
@@ -106,14 +106,14 @@ static inline char** Ball_texture_path(Ball*b)
     return &((*Ball_type(b))->tex_path);
 }
 
-static inline T_COL Ball_width(Ball*b)
-{
-    return (*Ball_type(b))->radius * 2;
-}
-
 static inline T_WEIGHT* Ball_weight(Ball*b)
 {
     return &(*Ball_type(b))->weight;
+}
+
+static inline T_TIMESTAMP* Ball_timestamp(Ball*b)
+{
+    return &b->timestamp;
 }
 
 // properties that isn't attributes
@@ -151,6 +151,11 @@ static inline double Ball_angleDeg(Ball*b)
 static inline bool Ball_initialized(Ball*b)
 {
     return *Texture_raw(Ball_texture(b)) == NULL;
+}
+
+static inline T_COL Ball_width(Ball*b)
+{
+    return (*Ball_type(b))->radius * 2;
 }
 
 // methods

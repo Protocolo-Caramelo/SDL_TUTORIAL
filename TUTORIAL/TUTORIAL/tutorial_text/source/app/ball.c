@@ -78,79 +78,22 @@ void BallVTable_render(Ball*b)
     tex_h = Ball_width(b) / tex_w * tex_h;
     tex_w = Ball_width(b);
 
-    // Check for possible colisions
-    Ball *ptr_b;
-    size_t ptr_prev;
-    double dist_balls;
-    double vn_cos, vn_sin, vn_v;
-    double impulseX, impulseY, impulse;
-    T_COL dist_x, vn_vx;
-    T_ROW dist_y, vn_vy;
-
-    ptr_prev = *Balls_ptr();
-    *Balls_ptr() = 0;
-    while(*Balls_ptr() < *Balls_idx() && *Ball_state(b) == BALLSTATE_DROPPED){
-        ptr_b = Balls_getCurr();
-        ++*Balls_ptr();
-        if(ptr_prev == *Balls_ptr() - 1 || *Ball_state(ptr_b) != BALLSTATE_DROPPED){
-            continue;
-        }
-
-        dist_x = *Ball_x(b) - *Ball_x(ptr_b) + *Ball_radius(b) - *Ball_radius(ptr_b) + *Ball_vx(b);
-        dist_y = *Ball_y(b) - *Ball_y(ptr_b) + *Ball_radius(b) - *Ball_radius(ptr_b) + *Ball_vy(b);
-        dist_balls = pow(pow(dist_x, 2) + pow(dist_y, 2), 0.5);
-        // printf("%.2lf, %.2lf\n", dist_balls, *Ball_radius(b) + *Ball_radius(ptr_b));
-        if(*Ball_radius(ptr_b) + *Ball_radius(b) < dist_balls){
-            continue;
-        }
-
-        printf("Colision ball %li with %li\n", ptr_prev, *Balls_ptr() - 1);
-        vn_cos = dist_x / dist_balls;
-        vn_sin = dist_y / dist_balls;
-        vn_vx = *Ball_vx(b) - *Ball_vx(ptr_b);
-        vn_vy = *Ball_vy(b) - *Ball_vy(ptr_b);
-        vn_v = vn_vx * vn_cos + vn_vy * vn_sin;
-
-        impulse = -(1.0 + 1) * vn_v;
-        impulse /= (1.0 / *Ball_weight(b)) + (1.0 / *Ball_weight(ptr_b));
-        impulseX = impulse * vn_cos;
-        impulseY = impulse * vn_sin;
-
-        *Ball_vx(b) += impulseX / *Ball_weight(b);
-        *Ball_vy(b) += impulseY / *Ball_weight(b);
-        *Ball_vx(ptr_b) -= impulseX / *Ball_weight(ptr_b);
-        *Ball_vy(ptr_b) -= impulseY / *Ball_weight(ptr_b);
-
-    }
-    *Balls_ptr() = ptr_prev;
-
-    // Calculate velocity
+    // Increase velocity
     *Ball_x(b) += *Ball_vx(b);
     *Ball_y(b) += *Ball_vy(b);
 
-    // Add air resistence
-    if((int)(win_h - *Ball_y(b) - tex_h) > 0 && *Ball_state(b) == BALLSTATE_DROPPED){
-        *Ball_vy(b) += G_FORCE_ITR;
+    if(*Ball_x(b) + tex_w > win_w){
+        *Ball_x(b) = win_w - tex_w;
     }
-
-    // Check if ball hit a wall and add friction to it
-    if(*Ball_x(b) + *Ball_vx(b) < 0 || *Ball_x(b) + *Ball_vx(b) + tex_w >= win_w){
-        *Ball_vx(b) *= -1;
-        *Ball_vx(b) += -*Ball_vx(b) * FRICTION_VAL * fabs(Ball_cos(b));
-        *Ball_vy(b) += -*Ball_vy(b) * FRICTION_VAL * fabs(Ball_sin(b));
+    else if(*Ball_x(b) < 0){
+        *Ball_x(b) = 0;
     }
-    if(*Ball_y(b) + *Ball_vy(b) < 0 || *Ball_y(b) + *Ball_vy(b) + tex_h >= win_h){
-        *Ball_vy(b) *= -1;
-        *Ball_vx(b) += -*Ball_vx(b) * FRICTION_VAL * fabs(Ball_cos(b));
-        *Ball_vy(b) += -*Ball_vy(b) * FRICTION_VAL * fabs(Ball_sin(b));
+    if(*Ball_y(b) + tex_h > win_h){
+        *Ball_y(b) = win_h - tex_h;
     }
-
-    /*
-    if((int)*Ball_vx(b) == 0 && (int)*Ball_vy(b)){
-        *Ball_vx(b) = 0;
-        *Ball_vy(b) = 0;
+    else if(*Ball_y(b) < 0){
+        *Ball_y(b) = 0;
     }
-    // */
 
     //
     Texture *t;
@@ -211,14 +154,14 @@ void Ball_event_mouseButtonUp(Ball*b, SDL_Event e)
     double dist;
     dist = Guideline_dist(&guideline);
     if(*Ball_state(b) == BALLSTATE_AIM && dist > 0){
-        *Ball_state(b) = BALLSTATE_DROPPED;
         *Ball_vx(b) = dist * -Guideline_cos(&guideline) / 10;
         *Ball_vy(b) = dist * -Guideline_sin(&guideline) / 10;
     }
     else if(*Ball_state(b) == BALLSTATE_AIM && !dist){
-        *Ball_state(b) = BALLSTATE_DROPPED;
         *Ball_vx(b) = 0;
         *Ball_vy(b) = -1;
     }
+    *Ball_state(b) = BALLSTATE_DROPPED;
+    *Ball_timestamp(b) = SDL_GetTicks();
     // printf("%.2lf, %.2lf\n", *Ball_vx(b), *Ball_vy(b));
 }
