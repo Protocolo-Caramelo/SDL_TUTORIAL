@@ -79,8 +79,8 @@ void BallVTable_render(Ball*b)
     tex_w = Ball_width(b);
 
     // Increase velocity
-    *Ball_x(b) += *Ball_vx(b);
-    *Ball_y(b) += *Ball_vy(b);
+    // *Ball_x(b) += *Ball_vx(b);
+    // *Ball_y(b) += *Ball_vy(b);
 
     //
     Texture *t;

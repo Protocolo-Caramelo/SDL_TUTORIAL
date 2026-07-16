@@ -27,21 +27,19 @@ void Balls_exit()
 
 void Balls_render()
 {
-    simulation_i = 0;
-    Balls_calculate_friction();
-    for(simulation_i=0; simulation_i < SIMULATION_ITR_MAX; ++simulation_i){
+    size_t i;
+    simulation_i=0;
+    // Balls_calculate_friction();
+    for(simulation_i=0; simulation_i < SIMULATION_ITR_MAX + 1; ++simulation_i){
         Balls_calculate_colision();
+        Balls_calculate_velocity();
         Balls_calculate_friction();
         Balls_calculate_position();
+        for(i=0; i < *Balls_idx() && !(simulation_i % 2); ++i){
+            *Balls_ptr() = i;
+            Ball_render(Balls_getCurr());
+        }
     }
-
-    // Check for colosition and calculate the vx and vy for all balls
-    *Balls_ptr() = 0;
-    while(*Balls_ptr() < *Balls_idx()){
-        Ball_render(Balls_getCurr());
-        ++*Balls_ptr();
-    }
-
 }
 
 void Balls_event(SDL_Event e)
@@ -111,24 +109,25 @@ void Balls_calculate_friction()
 
         // Add gavity!
         if((int)(win_h - *Ball_y(b) - tex_h) > 0 && *Ball_state(b) == BALLSTATE_DROPPED && !simulation_i){
-            *Ball_vy(b) += G_FORCE * (timestamp_curr - *Ball_timestamp(b)) / 1000;
+            // *Ball_vy(b) += G_FORCE * (timestamp_curr - *Ball_timestamp(b)) / 1000;
+            *Ball_vy(b) += G_FORCE * DELAY_PER_FRAME / 1000 * SIMULATION_SPEED;
         }
 
         // Check if ball hit a wall and add friction to it
         if(
             // Hit the left wall
-            *Ball_x(b) + *Ball_vx(b) < 0
+            *Ball_x(b) /* + *Ball_vx(b) */ < 0
             // Hit the right wall
-            || *Ball_x(b) + *Ball_vx(b) + tex_w >= win_w
+            || *Ball_x(b) /* + *Ball_vx(b) */ + tex_w >= win_w
             ){
             *Ball_vx(b) = -*Ball_vx(b) * FRICTION_ELASTIC_VAL;
             *Ball_vy(b) *= (1.0f - FRICTION_VAL);
         }
         if(
             // Hit the upper wall
-            *Ball_y(b) + *Ball_vy(b) < 0 
+            *Ball_y(b) /* + *Ball_vy(b) */ < 0 
             // Hit the under wall
-            || *Ball_y(b) + *Ball_vy(b) + tex_h >= win_h
+            || *Ball_y(b) /* + *Ball_vy(b) */ + tex_h >= win_h
           ){
             *Ball_vx(b) *= (1.0f - FRICTION_VAL);
             *Ball_vy(b) = -*Ball_vy(b) * FRICTION_ELASTIC_VAL;
@@ -165,18 +164,18 @@ void Balls_calculate_colision()
     for(i=0; i < *Balls_idx(); ++i){
         *Balls_ptr() = i;
         b1 = Balls_getCurr();
-        for(j=0; j < *Balls_idx(); ++j){
+        for(j= i + 1; j < *Balls_idx(); ++j){
             *Balls_ptr() = j;
             b2 = Balls_getCurr();
             if(*Ball_state(b1) != BALLSTATE_DROPPED){
                 break;
             }
-            if(j == i || *Ball_state(b2) != BALLSTATE_DROPPED){
+            if(/*j == i ||*/ *Ball_state(b2) != BALLSTATE_DROPPED){
                 continue;
             }
 
-            dist_x = *Ball_x(b1) - *Ball_x(b2) + *Ball_radius(b1) - *Ball_radius(b2) + *Ball_vx(b1) - *Ball_vx(b2);
-            dist_y = *Ball_y(b1) - *Ball_y(b2) + *Ball_radius(b1) - *Ball_radius(b2) + *Ball_vy(b1) - *Ball_vy(b2);
+            dist_x = *Ball_x(b1) - *Ball_x(b2) + *Ball_radius(b1) - *Ball_radius(b2); // + *Ball_vx(b1) - *Ball_vx(b2);
+            dist_y = *Ball_y(b1) - *Ball_y(b2) + *Ball_radius(b1) - *Ball_radius(b2); // + *Ball_vy(b1) - *Ball_vy(b2);
             dist_balls = pow(pow(dist_x, 2) + pow(dist_y, 2), 0.5);
             if(*Ball_radius(b2) + *Ball_radius(b1) < dist_balls){
                 continue;
@@ -189,14 +188,15 @@ void Balls_calculate_colision()
             vn_v = vn_vx * vn_cos + vn_vy * vn_sin;
 
             impulse = -(1.0 + COLISION_ELASTIC_VAL) * vn_v;
-            impulse /= (1.0 / *Ball_weight(b1)) + (1.0 / *Ball_weight(b2));
+            impulse /= ((1.0 / *Ball_weight(b1)) / 1) + ((1.0 / *Ball_weight(b2)) / 1);
             impulseX = impulse * vn_cos;
             impulseY = impulse * vn_sin;
 
-            *Ball_vx(b1) += impulseX / *Ball_weight(b1);
-            *Ball_vy(b1) += impulseY / *Ball_weight(b1);
-            *Ball_vx(b2) -= impulseX / *Ball_weight(b2);
-            *Ball_vy(b2) -= impulseY / *Ball_weight(b2);
+            // printf("Ball %li: %.2lf, %.2lf, %.2lf, %.2lf\n", i, vn_v, vn_cos, impulseX / (*Ball_weight(b1)), *Ball_vx(b1));
+            *Ball_vx(b1) += impulseX / (*Ball_weight(b1));
+            *Ball_vy(b1) += impulseY / (*Ball_weight(b1));
+            *Ball_vx(b2) -= impulseX / (*Ball_weight(b2));
+            *Ball_vy(b2) -= impulseY / (*Ball_weight(b2));
         }
     }
 }
@@ -243,13 +243,26 @@ void Balls_calculate_position()
             corr_x = vn_cos * pen / massInv_tot;
             corr_y = vn_sin * pen / massInv_tot;
 
-            printf("Ball %li: %lf, %lf\n", i, corr_y * massInv_b1, corr_y * massInv_b2);
+            // printf("Ball %li: %lf, %lf\n", i, corr_y * massInv_b1, corr_y * massInv_b2);
 
             *Ball_x(b1) += corr_x * massInv_b1;
             *Ball_y(b1) += corr_y * massInv_b1;
             *Ball_x(b2) -= corr_x * massInv_b2;
             *Ball_y(b2) -= corr_y * massInv_b2;
         }
+    }
+}
+
+void Balls_calculate_velocity()
+{
+    Ball *b;
+    size_t i;
+    for(i=0; i < *Balls_idx(); ++i){
+        *Balls_ptr() = i;
+        b = Balls_getCurr();
+
+        *Ball_x(b) += *Ball_vx(b) * (DELAY_PER_FRAME / 1000) / SIMULATION_ITR_MAX * 100 * SIMULATION_SPEED;
+        *Ball_y(b) += *Ball_vy(b) * (DELAY_PER_FRAME / 1000) / SIMULATION_ITR_MAX * 100 * SIMULATION_SPEED;
     }
 }
 

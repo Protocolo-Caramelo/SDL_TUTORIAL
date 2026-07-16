@@ -108,6 +108,7 @@ void Balls_event(SDL_Event);
 void Balls_calculate_friction();
 void Balls_calculate_colision();
 void Balls_calculate_position();
+void Balls_calculate_velocity();
 
 void Balls_event_keyDown(SDL_Event);
 void Balls_event_keyUp(SDL_Event);

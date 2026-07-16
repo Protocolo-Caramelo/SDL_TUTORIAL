@@ -16,8 +16,6 @@ typedef double T_WEIGHT;
 
 typedef uint64_t T_TIMESTAMP;
 
-#define SDL_DELAY 16 // ms
-
 #define RAD_TO_DEG(a) (a * 180 / M_PI)
 #define DEG_TO_RAG(a) (a * M_PI / 180)
 
@@ -38,10 +36,16 @@ typedef uint64_t T_TIMESTAMP;
 #define G_FORCE 9.8 // ms/s^2
 #define FRICTION_VAL 0.2
 #define FRICTION_ELASTIC_VAL 0.8
-#define DELTATIME (16 / 60)
 #define COLISION_ELASTIC_VAL 1
 
-#define SIMULATION_ITR_MAX 30
+#define SIMULATION_ITR_MAX 10
+#define SIMULATION_SPEED (1.0 / 1)
+
+/*
+ * Technical values
+ */
+#define FRAMES_PER_SEC 60
+#define DELAY_PER_FRAME (1000.0 / FRAMES_PER_SEC / SIMULATION_SPEED) // ms
 
 /*
  * Ball

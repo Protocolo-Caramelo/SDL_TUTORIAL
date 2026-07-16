@@ -51,8 +51,8 @@ struct Ball {
     BallState state;
     Texture texture;
     T_TIMESTAMP timestamp;
-    T_COL x, vx;
-    T_ROW y, vy;
+    T_COL x, vx; // m / s
+    T_ROW y, vy; // m / s
 };
 
 // getters / setters
