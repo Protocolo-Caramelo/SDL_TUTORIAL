@@ -82,19 +82,6 @@ void BallVTable_render(Ball*b)
     *Ball_x(b) += *Ball_vx(b);
     *Ball_y(b) += *Ball_vy(b);
 
-    if(*Ball_x(b) + tex_w > win_w){
-        *Ball_x(b) = win_w - tex_w;
-    }
-    else if(*Ball_x(b) < 0){
-        *Ball_x(b) = 0;
-    }
-    if(*Ball_y(b) + tex_h > win_h){
-        *Ball_y(b) = win_h - tex_h;
-    }
-    else if(*Ball_y(b) < 0){
-        *Ball_y(b) = 0;
-    }
-
     //
     Texture *t;
     SDL_Rect dest;

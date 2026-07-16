@@ -7,6 +7,7 @@ extern Ball balls[];
 extern size_t balls_idx;
 extern size_t balls_size;
 extern size_t balls_ptr;
+extern size_t simulation_i;
 
 typedef enum {
     FOOTBALL_TYPE,

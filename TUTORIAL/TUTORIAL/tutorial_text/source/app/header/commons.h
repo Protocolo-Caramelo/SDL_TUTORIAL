@@ -37,8 +37,11 @@ typedef uint64_t T_TIMESTAMP;
  */
 #define G_FORCE 9.8 // ms/s^2
 #define FRICTION_VAL 0.2
+#define FRICTION_ELASTIC_VAL 0.8
 #define DELTATIME (16 / 60)
-#define ELASTIC 0.8
+#define COLISION_ELASTIC_VAL 1
+
+#define SIMULATION_ITR_MAX 30
 
 /*
  * Ball
