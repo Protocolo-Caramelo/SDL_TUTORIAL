@@ -4,6 +4,7 @@
 #include"App.h"
 #include"Balls.h"
 #include"Guideline.h"
+#include"Infos.h"
 
 #if GUIDELINE_DASHEDLINE_SPACE < GUIDELINE_DASHEDLINE_WIDTH
 #error "GUIDELINE_DASHEDLINE_SPACE must be grather or equals to GUIDELINE_DAHSEDLINE_WIDTH"

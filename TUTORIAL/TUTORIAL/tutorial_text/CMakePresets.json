@@ -4,7 +4,17 @@
     [
         {
             "name": "text",
-            "binaryDir": "${sourceDir}/build"
+            "binaryDir": "${sourceDir}/build",
+            "cacheVariables": {
+                "compilation_mode": "NORMAL"
+            }
+        },
+        {
+            "name": "devquote",
+            "binaryDir": "${sourceDir}/devquote",
+            "cacheVariables": {
+                "compilation_mode": "DEVQUOTE"
+            }
         }
     ]
 }

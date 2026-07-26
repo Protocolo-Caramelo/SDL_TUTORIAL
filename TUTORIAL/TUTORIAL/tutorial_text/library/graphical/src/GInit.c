@@ -11,4 +11,9 @@ void graphical_init()
         printf("Error while initializing images: %s\n", SDL_GetError());
         exit(1);
     }
+
+    if(TTF_Init()){
+        printf("Error while initializing ttf libary: %s\n", SDL_GetError());
+        exit(1);
+    }
 }

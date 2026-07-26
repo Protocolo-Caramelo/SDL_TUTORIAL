@@ -1,7 +1,7 @@
 #ifndef GTEXTURE_H
 #define GTEXTURE_H
 
-#include"GCommuns.h"
+#include"GCommons.h"
 
 typedef struct TextureVTable TextureVTable;
 typedef struct Texture Texture;

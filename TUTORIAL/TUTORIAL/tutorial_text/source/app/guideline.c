@@ -149,7 +149,7 @@ void GuidelineVTable_event(Guideline*g, SDL_Event e)
  */
 void Guideline_event_mouseButtonDown(Guideline*g, SDL_Event e)
 {
-    if(e.button.button == 2){
+    if(e.button.button == 2 || *Balls_idx() >= *Balls_size()){
         return;
     }
 

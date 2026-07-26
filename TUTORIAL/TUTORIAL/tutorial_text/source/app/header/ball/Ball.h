@@ -4,8 +4,9 @@
 #include"commons.h"
 
 typedef struct Ball Ball;
-typedef struct BallVTable BallVTable;
 typedef struct BallType BallType;
+typedef struct BallInfos BallInfos;
+typedef struct BallVTable BallVTable;
 
 extern BallType BT_Football, BT_Basketball, BT_Tennis, BT_PingPong;
 
@@ -50,9 +51,9 @@ struct Ball {
     BallType *type;
     BallState state;
     Texture texture;
-    T_TIMESTAMP timestamp;
     T_COL x, vx; // m / s
     T_ROW y, vy; // m / s
+    Text infos;
 };
 
 // getters / setters
@@ -111,9 +112,9 @@ static inline T_WEIGHT* Ball_weight(Ball*b)
     return &(*Ball_type(b))->weight;
 }
 
-static inline T_TIMESTAMP* Ball_timestamp(Ball*b)
+static inline Text* Ball_infos(Ball*b)
 {
-    return &b->timestamp;
+    return &b->infos;
 }
 
 // properties that isn't attributes
@@ -180,7 +181,11 @@ static inline void Ball_event(Ball*b, SDL_Event e)
 }
 
 // Ball events
+void Ball_render_ball(Ball*);
+void Ball_render_ballInfos(Ball*);
+
 void Ball_event_mouseButtonDown(Ball*, SDL_Event);
 void Ball_event_mouseButtonUp(Ball*, SDL_Event);
+
 
 #endif

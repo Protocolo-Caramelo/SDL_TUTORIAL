@@ -37,7 +37,7 @@ void Balls_render()
         Balls_calculate_position();
         for(i=0; i < *Balls_idx() && !(simulation_i % 2); ++i){
             *Balls_ptr() = i;
-            Ball_render(Balls_getCurr());
+            Ball_render_ball(Balls_getCurr());
         }
     }
 }
@@ -79,7 +79,6 @@ void Balls_calculate_friction()
     int tex_w, tex_h;
     size_t i;
     Ball *b;
-    T_TIMESTAMP timestamp_curr;
 
     // Check colisions with the screen wall
     *Balls_ptr() = 0;
@@ -105,11 +104,9 @@ void Balls_calculate_friction()
         );
         tex_h *= Ball_width(b) / tex_w;
         tex_w = Ball_width(b);
-        timestamp_curr = SDL_GetTicks();
 
         // Add gavity!
         if((int)(win_h - *Ball_y(b) - tex_h) > 0 && *Ball_state(b) == BALLSTATE_DROPPED && !simulation_i){
-            // *Ball_vy(b) += G_FORCE * (timestamp_curr - *Ball_timestamp(b)) / 1000;
             *Ball_vy(b) += G_FORCE * DELAY_PER_FRAME / 1000 * SIMULATION_SPEED;
         }
 
@@ -145,8 +142,6 @@ void Balls_calculate_friction()
         else if(*Ball_y(b) < 0){
             *Ball_y(b) = 0;
         }
-
-        *Ball_timestamp(b) = timestamp_curr;
     }
 }
 
@@ -304,19 +299,27 @@ void Balls_event_mouseButtonDown(SDL_Event e)
 {
     if(e.button.button == 2)
         return;
-    Ball new_b = {
-        .type = Balls_getCurrType(),
-        .state = BALLSTATE_AIM,
-        .x = e.button.x - Balls_getCurrType()->radius,
-        .y = e.button.y - Balls_getCurrType()->radius
-    };
-    Ball_init(&new_b);
 
-    Balls_add(new_b);
+    Balls_event_createBall(e.button.x, e.button.y);
 }
 
 void Balls_event_mouseButtonUp(SDL_Event e)
 {
     if(e.button.button == 2)
         return;
+}
+
+void Balls_event_createBall(T_COL x, T_ROW y)
+{
+    if(*Balls_idx() >= *Balls_size()){
+        return;
+    }
+    Ball *new_b = Balls_get(*Balls_idx());
+    *Ball_type(new_b) = Balls_getCurrType();
+    *Ball_state(new_b) = BALLSTATE_AIM;
+    *Ball_x(new_b) = x - (*Ball_type(new_b))->radius;
+    *Ball_y(new_b) = y - (*Ball_type(new_b))->radius;
+
+    Ball_init(new_b);
+    ++*Balls_idx();
 }

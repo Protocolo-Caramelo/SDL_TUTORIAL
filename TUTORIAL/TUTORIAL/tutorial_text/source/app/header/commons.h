@@ -7,8 +7,6 @@
 
 typedef double T_COL;
 typedef double T_ROW;
-typedef int16_t T_COLINT;
-typedef int16_t T_ROWINT;
 
 typedef uint16_t T_WIDTH;
 typedef uint16_t T_HEIGHT;

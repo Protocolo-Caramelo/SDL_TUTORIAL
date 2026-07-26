@@ -8,10 +8,16 @@ target_sources(
         FILE_SET graphical
         TYPE HEADERS
         FILES
-        ${GRAPHICAL_HEADERS}
+        GCommons.h
+        GInit.h
+        GText.h
+        GTexture.h
+        GWindow.h
+        graphical.h
 
     PRIVATE
-        ${GRAPHICAL_SOURCES}
+        src/GInit.c
+        src/GText.c
     )
 target_link_libraries(
     graphical

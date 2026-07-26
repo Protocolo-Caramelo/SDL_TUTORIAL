@@ -1,7 +1,7 @@
 #ifndef GWINDOW_H
 #define GWINDOW_H
 
-#include"GCommuns.h"
+#include"GCommons.h"
 
 typedef struct WindowVTable WindowVTable;
 typedef struct Window Window;

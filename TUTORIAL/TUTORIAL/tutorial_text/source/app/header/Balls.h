@@ -43,6 +43,11 @@ static inline Ball* Balls_getCurr()
     return &balls[*Balls_ptr()];
 }
 
+static inline Ball* Balls_get(size_t i)
+{
+    return &balls[i];
+}
+
 static inline void Balls_next()
 {
     *Balls_ptr() = (!*Balls_ptr())? 0: (*Balls_ptr() + 1) % *Balls_size();
@@ -110,9 +115,12 @@ void Balls_calculate_colision();
 void Balls_calculate_position();
 void Balls_calculate_velocity();
 
+// Specific functions for better clean code
 void Balls_event_keyDown(SDL_Event);
 void Balls_event_keyUp(SDL_Event);
 void Balls_event_mouseButtonDown(SDL_Event);
 void Balls_event_mouseButtonUp(SDL_Event);
+
+void Balls_event_createBall(T_COL, T_ROW);
 
 #endif

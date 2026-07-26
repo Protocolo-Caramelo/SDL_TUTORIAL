@@ -60,6 +60,27 @@ void BallVTable_exit(Ball*b)
 
 void BallVTable_render(Ball*b)
 {
+    Ball_render_ball(b);
+}
+
+void BallVTable_event(Ball*b, SDL_Event e)
+{
+    switch(e.type){
+        case SDL_MOUSEBUTTONDOWN:
+            Ball_event_mouseButtonDown(b, e);
+            break;
+
+        case SDL_MOUSEBUTTONUP:
+            Ball_event_mouseButtonUp(b, e);
+            break;
+        default:
+            break;
+    }
+}
+
+//
+void Ball_render_ball(Ball*b)
+{
     int tex_w, win_w;
     int tex_h, win_h;
 
@@ -107,25 +128,8 @@ void BallVTable_render(Ball*b)
         NULL,
         &dest
     );
-
 }
 
-void BallVTable_event(Ball*b, SDL_Event e)
-{
-    switch(e.type){
-        case SDL_MOUSEBUTTONDOWN:
-            Ball_event_mouseButtonDown(b, e);
-            break;
-
-        case SDL_MOUSEBUTTONUP:
-            Ball_event_mouseButtonUp(b, e);
-            break;
-        default:
-            break;
-    }
-}
-
-//
 void Ball_event_mouseButtonDown(Ball*b, SDL_Event e)
 {
     if(e.button.button == 2)
@@ -149,6 +153,5 @@ void Ball_event_mouseButtonUp(Ball*b, SDL_Event e)
         *Ball_vy(b) = -1;
     }
     *Ball_state(b) = BALLSTATE_DROPPED;
-    *Ball_timestamp(b) = SDL_GetTicks();
     // printf("%.2lf, %.2lf\n", *Ball_vx(b), *Ball_vy(b));
 }

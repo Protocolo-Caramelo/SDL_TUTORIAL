@@ -70,6 +70,7 @@ void AppVTable_event(App*app, SDL_Event e)
             App_exit(app);
             Guideline_exit(&guideline);
             Balls_exit();
+            Infos_exit();
 
             exit(0);
             break;
