@@ -11,6 +11,7 @@ target_sources(
         GCommons.h
         GInit.h
         GText.h
+        GTextFont.h
         GTexture.h
         GWindow.h
         graphical.h
@@ -18,6 +19,7 @@ target_sources(
     PRIVATE
         src/GInit.c
         src/GText.c
+        src/GTextFont.c
     )
 target_link_libraries(
     graphical
@@ -25,6 +27,7 @@ target_link_libraries(
         SDL2
         SDL2_image
         SDL2_ttf
+        utf8
     )
 
 target_compile_options(

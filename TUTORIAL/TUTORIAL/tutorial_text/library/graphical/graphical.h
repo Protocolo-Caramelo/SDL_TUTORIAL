@@ -4,6 +4,7 @@
 #include"GInit.h"
 #include"GWindow.h"
 #include"GTexture.h"
+#include"GTextFont.h"
 #include"GText.h"
 
 #endif

@@ -13,7 +13,6 @@
 #define INFOS_MARGINCOLOR ((SDL_Color){0, 0, 0, 255})
 #define INFOS_MARGIN ((TextSpacing){0, 0, 0, 0, INFOS_MARGINCOLOR})
 
-extern TextVTable InfosVTable;
 extern TTF_Font* InfoFont;
 
 /*
@@ -93,11 +92,6 @@ extern uint64_t info_balls;
 /*
  *
  */
-void InfosVTable_init(Text*t);
-void InfosVTable_exit(Text*t);
-void InfosVTable_render(Text*t);
-void InfosVTable_event(Text*t, SDL_Event);
-
 void Infos_init();
 void Infos_exit();
 void Infos_render();
