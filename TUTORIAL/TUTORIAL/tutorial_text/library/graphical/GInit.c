@@ -1,4 +1,4 @@
-#include<graphical.h>
+#include"GInit.h"
 
 void graphical_init()
 {

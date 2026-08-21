@@ -18,10 +18,11 @@ struct TextSpacing {
 
     SDL_Color color;
 };
-WRAP_FIELD(TextSpacing, top, unsigned);
-WRAP_FIELD(TextSpacing, right, unsigned);
-WRAP_FIELD(TextSpacing, bottom, unsigned);
-WRAP_FIELD(TextSpacing, left, unsigned);
-WRAP_FIELD(TextSpacing, color, SDL_Color);
+
+//
+// Methods
+//
+int TextSpacing_Equals(TextSpacing*a, TextSpacing*b);
+int TextSpacing_Zered(TextSpacing*a);
 
 #endif

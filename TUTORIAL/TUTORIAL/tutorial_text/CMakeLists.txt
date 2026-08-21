@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 4.2.3)
-project(text)
+project(text C)
 
 find_package(SDL2 REQUIRED)
 find_package(SDL2_image REQUIRED)

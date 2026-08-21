@@ -2,6 +2,7 @@
 #define BALL_H
 
 #include"commons.h"
+#include"Guideline.h"
 
 typedef struct Ball Ball;
 typedef struct BallType BallType;

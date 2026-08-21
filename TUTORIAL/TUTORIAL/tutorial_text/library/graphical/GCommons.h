@@ -5,6 +5,8 @@
 #include<SDL2/SDL_image.h>
 #include<SDL2/SDL_ttf.h>
 
+#include<math.h>
+
 // WRAP_FIELD Macro
 /*
  * From struct S, wrap a field F of type T width name A
@@ -115,5 +117,10 @@ static inline type* strct##_##name(strct*s) \
 
 // Others usefull macros
 #define MAX(a, b) ((a) > (b)? (a): (b))
+#define RAD_TO_DEG(r) (180 / M_PI * (r))
+#define DEG_TO_RAD(d) (M_PI / 180 * (d))
+
+// Typedefs
+typedef SDL_Rect Glyph;
 
 #endif

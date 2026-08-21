@@ -74,5 +74,8 @@ typedef uint64_t T_TIMESTAMP;
 #define TENNIS_WEIGHT 0.060
 #define PINGPONG_WEIGHT 0.003
 
+/*
+ * Global Vars
+ */
 
 #endif

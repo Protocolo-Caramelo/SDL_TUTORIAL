@@ -1,6 +1,7 @@
-add_library(graphical)
-file(GLOB GRAPHICAL_SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c")
-file(GLOB GRAPHICAL_HEADERS "${CMAKE_CURRENT_SOURCE_DIR}/*.h")
+add_library(
+    graphical
+    STATIC
+)
 
 target_sources(
     graphical
@@ -8,18 +9,36 @@ target_sources(
         FILE_SET graphical
         TYPE HEADERS
         FILES
-        GCommons.h
-        GInit.h
-        GText.h
-        GTextFont.h
-        GTexture.h
-        GWindow.h
         graphical.h
 
+        GCommons.h
+        GInit.h
+        GTexture.h
+        GWindow.h
+
+        GText/GText.h
+        GText/GTextCache.h
+        GText/GTextCacheGlyph.h
+        GText/GTextCharFormat.h
+        GText/GTextConfig.h
+        GText/GTextSpacing.h
+
+        GTest/GTest.h
+
     PRIVATE
-        src/GInit.c
-        src/GText.c
-        src/GTextFont.c
+        GInit.c
+        GWindow.c
+        GTexture.c
+
+        GText/GText.c
+        GText/GTextCache.c
+        GText/GTextCacheGlyph.c
+        GText/GTextConfig.c
+        GText/GTextSpacing.c
+
+        GTest/GText.c
+        GTest/GTextCG.c
+        GTest/GTextCache.c
     )
 target_link_libraries(
     graphical
@@ -28,6 +47,14 @@ target_link_libraries(
         SDL2_image
         SDL2_ttf
         utf8
+        uthash
+    )
+
+target_include_directories(
+    graphical
+    PRIVATE
+        GText
+        GTest
     )
 
 target_compile_options(

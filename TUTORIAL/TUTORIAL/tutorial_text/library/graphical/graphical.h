@@ -4,7 +4,11 @@
 #include"GInit.h"
 #include"GWindow.h"
 #include"GTexture.h"
-#include"GTextFont.h"
-#include"GText.h"
+
+#include"GText/GTextCharFormat.h"
+#include"GText/GTextSpacing.h"
+#include"GText/GText.h"
+
+#include"GTest/GTest.h"
 
 #endif

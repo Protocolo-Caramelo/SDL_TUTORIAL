@@ -1,23 +1,9 @@
-add_library(utf8)
-target_sources(
-    utf8
-    PUBLIC
-        FILE_SET utf8
-        TYPE HEADERS
-        FILES
-            utf8.h
-
-    PRIVATE
-        ./utf8.c
+add_library(
+    utf8 INTERFACE
 )
-
-target_compile_options(
+target_include_directories(
     utf8
-    PRIVATE
-        ${compile_options}
-)
-target_compile_features(
-    utf8
-    PRIVATE
-        ${compile_features}
+    INTERFACE
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}>
+        $<INSTALL_INTERFACE:utf8>
 )
