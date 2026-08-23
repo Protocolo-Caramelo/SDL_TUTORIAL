@@ -19,6 +19,7 @@ struct TextConfig {
     TextCharFormat fmt;
     unsigned lineskip;
     unsigned wrap;
+    double rotation;
     //
     double scale_width;
     double scale_height;

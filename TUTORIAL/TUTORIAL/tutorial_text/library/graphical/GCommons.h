@@ -117,6 +117,7 @@ static inline type* strct##_##name(strct*s) \
 
 // Others usefull macros
 #define MAX(a, b) ((a) > (b)? (a): (b))
+#define MIN(a, b) ((a) > (b)? (b): (a))
 #define RAD_TO_DEG(r) (180 / M_PI * (r))
 #define DEG_TO_RAD(d) (M_PI / 180 * (d))
 

@@ -30,7 +30,7 @@ int main()
 }
 
 #elif defined(COMPILATION_DEVQUOTE)
-#include"main.h"
+// #include"main.h"
 #include<graphical.h>
 
 #define VA_NUM_ARGS_IMPL(_0, _1, _2, _3, N, ...) N
@@ -55,41 +55,18 @@ int main()
     //
     // Test Text struct
     //
+    //*
     Text_Test(
         "./assets/fonts/Ubuntu/Ubuntu-Regular.ttf",
-        50,
-        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In mollis faucibus porttitor. Mauris tempor ut lorem ac laoreet. Quisque facilisis aliquet mauris a blandit. Sed magna ante, faucibus sit amet purus ac, eleifend posuere nunc. Duis id elit vulputate, sollicitudin odio nec, volutpat massa. Praesent auctor tincidunt massa, vitae interdum felis euismod sed. Vivamus ultrices, odio ac ullamcorper tincidunt, est urna iaculis lorem, a venenatis nunc magna ac quam. Donec nunc turpis, bibendum a lobortis at, auctor vitae augue."
+        100,
+        "Protocolo-Caramelo"
+        // "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In mollis faucibus porttitor. Mauris tempor ut lorem ac laoreet. Quisque facilisis aliquet mauris a blandit. Sed magna ante, faucibus sit amet purus ac, eleifend posuere nunc.Duis id elit vulputate, sollicitudin odio nec, volutpat massa. Praesent auctor tincidunt massa, vitae interdum felis euismod sed. Vivamus ultrices, odio ac ullamcorper tincidunt, est urna iaculis lorem, a venenatis nunc magna ac quam. Donec nunc turpis, bibendum a lobortis at, auctor vitae augue."
         );
+    // */
 
     //
     // Main loop
     //
-
-    /*
-    while(1){
-        SDL_SetRenderDrawColor(r, 0, 255, 255, 255);
-        SDL_RenderClear(r);
-
-        // Events
-        while(SDL_PollEvent(&e)){
-            switch(e.type){
-                case SDL_QUIT:
-                    SDL_DestroyWindow(w);
-                    SDL_DestroyRenderer(r);
-                    SDL_Quit();
-                    exit(1);
-                    break;
-                    
-                default:
-                    break;
-            }
-        }
-
-        // Loop
-        SDL_RenderPresent(r);
-        SDL_Delay(16);
-    }
-    // */
 
     return 0;
 }

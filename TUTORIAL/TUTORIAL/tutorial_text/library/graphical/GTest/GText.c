@@ -6,8 +6,12 @@ void Text_Test(char*path, unsigned ptsize, char*str)
     TextCache *cache;
     //
     double fps;
-    double time;
-    int fps_i;
+    unsigned time;
+    int fps_delay;
+    //
+    double chrRotation;
+    int chrRotation_delay;
+    int chrFmt;
     //
     SDL_Window *w;
     SDL_Renderer *r;
@@ -35,26 +39,42 @@ void Text_Test(char*path, unsigned ptsize, char*str)
     Text_SetUTF8(t, str);
 
     *Text_wrap(t) = 1024;
-    *Text_scaleWidth(t) = *Text_scaleHeight(t) = 1 / 2.0;
+    *Text_scaleWidth(t) = *Text_scaleHeight(t) = 1 / 5.0;
+    //
     fps = 0;
-    fps_i = 1;
+    fps_delay = SDL_GetTicks();
     time = SDL_GetTicks();
+    //
+    chrRotation_delay = 0;
+    chrRotation = 0;
+    chrFmt = 0;
     while(1){
-        // printf("FPS: %.2lf\n", fps / (fps_i));
+        if((SDL_GetTicks() - fps_delay) >= FPS_DELAY){
+            printf("FPS: %.2lf\n", fps);
+            fps_delay = SDL_GetTicks();
+        }
+        // printf("%lf\n", chrRotation);
+
+        // printf("%s %lf\n", str, chrRotation);
+        if((SDL_GetTicks() - chrRotation_delay) >= ROTATION_DELAY){
+            chrRotation_delay = SDL_GetTicks();
+            chrRotation = 0;
+            // ++chrFmt;
+            chrFmt %= (CHAR_FMT_REGULAR | CHAR_FMT_BOLD | CHAR_FMT_ITALIC | CHAR_FMT_UNDERLINE | CHAR_FMT_STRIKETHROUGH);
+        };
+
         SDL_SetRenderDrawColor(r, 255, 255, 0, 255);
         SDL_RenderClear(r);
-        *Text_chrRotation(t) = 270;
-        *Text_chrFlip(t) = SDL_FLIP_HORIZONTAL;
-        *Text_y(t) = 500;
-        *Text_rotation(t) = 90;
-        *Text_flip(t) = SDL_FLIP_VERTICAL;
         //*
         Text_DrawUTF8(
             t,
             str,
             (TextConfig){
                 .color=(SDL_Color){0, 0, 255, 255},
-                .fmt = CHAR_FMT_REGULAR
+                .fmt = chrFmt,
+                .chr_rotation = chrRotation,
+                // .chr_rotation = 324,
+                .rotation = 0
             }
         );
         // */
@@ -75,15 +95,12 @@ void Text_Test(char*path, unsigned ptsize, char*str)
             }
         }
 
-        ++fps_i;
-        if(fps_i >= FPS_I){
-            fps = 0;
-            fps_i = 1;
-        }
-        fps += 1000.0 / (SDL_GetTicks() - time);
-        time = SDL_GetTicks();
-
         SDL_RenderPresent(r);
         SDL_Delay(GTEST_DELAY);
+
+        fps = 1000.0 / (SDL_GetTicks() - time);
+        //chrRotation += (360.0 / ROTATION_DELAY) * (SDL_GetTicks() - time);
+        chrRotation += 360.0 / (ROTATION_DELAY / GTEST_DELAY);
+        time = SDL_GetTicks();
     }
 }

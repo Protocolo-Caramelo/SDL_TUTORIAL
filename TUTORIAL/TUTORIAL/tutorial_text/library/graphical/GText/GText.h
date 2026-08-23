@@ -22,7 +22,6 @@ struct Text {
     TextConfig config;
     char *raw;
     int x, y;
-    double rotation;
     SDL_RendererFlip flip;
 };
 WRAP_FIELD(Text, cache->texture.renderer, renderer, SDL_Renderer*);
@@ -66,9 +65,9 @@ WRAP_FIELD(Text, config.scale_height, scaleHeight, double);
 WRAP_FIELD(Text, config.chr_rotation, chrRotation, double);
 WRAP_FIELD(Text, config.chr_dist, chrDist, int);
 WRAP_FIELD(Text, config.chr_flip, chrFlip, SDL_RendererFlip);
+WRAP_FIELD(Text, config.rotation, rotation, double);
 /*------------------ */
 WRAP_FIELD(Text, flip, SDL_RendererFlip);
-WRAP_FIELD(Text, rotation, double);
 WRAP_FIELD(Text, x, int);
 WRAP_FIELD(Text, y, int);
 

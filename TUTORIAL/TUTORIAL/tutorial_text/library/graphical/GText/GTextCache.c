@@ -76,7 +76,7 @@ void TextCache_SetAtlasSize(TextCache*a, unsigned w, unsigned h)
             dest.x = 0;
             dest.y += lineskip;
         }
-        printf("Realloc %i: (%i %i)wh (%i %i)xy\n", TextCG_key(bin)->c, dest.w, dest.h, TextCG_cGlyph(bin)->w, TextCG_cGlyph(bin)->h);
+        // printf("Realloc %i: (%i %i)wh (%i %i)xy\n", TextCG_key(bin)->c, dest.w, dest.h, TextCG_cGlyph(bin)->w, TextCG_cGlyph(bin)->h);
 
         SDL_RenderCopy(
             *TextCache_renderer(a),
@@ -193,7 +193,7 @@ void TextCache_AddGlyph(TextCache*a, int c, TextCharFormat fmt)
         dest.x = 0;
         dest.y += lineskip;
     }
-    printf("%i: (%i %i)wh (%i %i)xy\n", c, dest.w, dest.h, dest.x, dest.y);
+    // printf("%i: (%i %i)wh (%i %i)xy\n", c, dest.w, dest.h, dest.x, dest.y);
 
     // Resize if the atla's texture isn't big enough
     // /*

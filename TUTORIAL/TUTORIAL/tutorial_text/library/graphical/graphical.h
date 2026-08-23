@@ -11,4 +11,7 @@
 
 #include"GTest/GTest.h"
 
+#undef RAD_TO_DEG
+#undef DEG_TO_RAD
+
 #endif
