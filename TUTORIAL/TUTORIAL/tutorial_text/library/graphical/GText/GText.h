@@ -1,14 +1,13 @@
 #ifndef GTEXT_H
 #define GTEXT_H
 
-#include<utf8.h>
-
 #include"GCommons.h"
 #include"GTexture.h"
-
 #include"GTextCache.h"
 #include"GTextConfig.h"
 #include"GTextCharFormat.h"
+
+#include<utf8.h>
 
 typedef struct Text Text;
 

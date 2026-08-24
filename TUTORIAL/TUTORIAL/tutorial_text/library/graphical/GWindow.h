@@ -2,6 +2,9 @@
 #define GWINDOW_H
 
 #include"GCommons.h"
+#include<SDL2/SDL_video.h>
+#include<SDL2/SDL_render.h>
+#include<SDL2/SDL_events.h>
 
 typedef struct WindowVTable WindowVTable;
 typedef struct Window Window;

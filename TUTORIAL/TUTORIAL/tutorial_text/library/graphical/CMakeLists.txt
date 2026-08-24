@@ -36,6 +36,7 @@ target_sources(
         GText/GTextConfig.c
         GText/GTextSpacing.c
 
+        GTest/SimpleWindow.c
         GTest/GText.c
         GTest/GTextCG.c
         GTest/GTextCache.c

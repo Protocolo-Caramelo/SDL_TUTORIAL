@@ -3,6 +3,7 @@
 
 #include"GCommons.h"
 #include"GTextCharFormat.h"
+#include"GTextGlyph.h"
 #include<uthash.h>
 
 typedef struct TextCacheGlyph TextCG;

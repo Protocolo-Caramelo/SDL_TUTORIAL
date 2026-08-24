@@ -1,10 +1,6 @@
 #ifndef GCOMMUNS_H
 #define GCOMMUNS_H
 
-#include<SDL2/SDL.h>
-#include<SDL2/SDL_image.h>
-#include<SDL2/SDL_ttf.h>
-
 #include<math.h>
 
 // WRAP_FIELD Macro
@@ -120,8 +116,5 @@ static inline type* strct##_##name(strct*s) \
 #define MIN(a, b) ((a) > (b)? (b): (a))
 #define RAD_TO_DEG(r) (180 / M_PI * (r))
 #define DEG_TO_RAD(d) (M_PI / 180 * (d))
-
-// Typedefs
-typedef SDL_Rect Glyph;
 
 #endif

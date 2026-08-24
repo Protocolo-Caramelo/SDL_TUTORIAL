@@ -64,11 +64,22 @@ void TextCache_SetAtlasSize(TextCache*a, unsigned w, unsigned h)
         w,
         h
     );
-    prev_target = SDL_GetRenderTarget(*TextCache_renderer(a));
+    if(!n_tex){
+        GRAPHICAL_LOG_ERROR("Error while creating resizing TextCache's texture: %s\n", SDL_GetError());
+        exit(1);
+    }
+    SDL_SetTextureBlendMode(
+        n_tex,
+        SDL_BLENDMODE_BLEND
+    );
+
     dest = (SDL_Rect){};
     lineskip =TTF_FontLineSkip(*TextCache_font(a));
+    prev_target = SDL_GetRenderTarget(*TextCache_renderer(a));
 
     SDL_SetRenderTarget(*TextCache_renderer(a), n_tex);
+    SDL_SetRenderDrawColor(*TextCache_renderer(a), 255, 255, 255, 0);
+    SDL_RenderClear(*TextCache_renderer(a));
     HASH_ITER(hh, *TextCache_glyphs(a), bin, tmp) {
         dest.w = TextCG_cGlyph(bin)->w;
         dest.h = TextCG_cGlyph(bin)->h;
@@ -89,10 +100,6 @@ void TextCache_SetAtlasSize(TextCache*a, unsigned w, unsigned h)
         dest.x += dest.w;
     }
     SDL_SetRenderTarget(*TextCache_renderer(a), prev_target);
-    SDL_SetTextureBlendMode(
-        n_tex,
-        SDL_BLENDMODE_BLEND
-    );
 
     SDL_DestroyTexture(*TextCache_texture(a));
     *TextCache_texture(a) = n_tex;
@@ -104,6 +111,7 @@ void TextCache_SetAtlasSize(TextCache*a, unsigned w, unsigned h)
 TextCache* TextCache_Create(SDL_Renderer*r, char *f_path, unsigned ptsize)
 {
     TextCache *n_cache;
+    SDL_Texture *target_prev;
 
     n_cache = malloc(sizeof(*n_cache));
     *TextCache_font(n_cache) = TTF_OpenFont(f_path, ptsize);
@@ -115,6 +123,15 @@ TextCache* TextCache_Create(SDL_Renderer*r, char *f_path, unsigned ptsize)
         TEXTFA_DEFAULT_TEXTURE_WIDTH,
         TEXTFA_DEFAULT_TEXTURE_HEIGHT
     );
+    if(!*TextCache_texture(n_cache)){
+        GRAPHICAL_LOG_ERROR("Error while creating texture for cache of font \"%s\" width ptsize %i: %s\n", f_path, ptsize, SDL_GetError());
+        exit(1);
+    }
+    SDL_SetTextureBlendMode(
+        *TextCache_texture(n_cache),
+        SDL_BLENDMODE_BLEND
+    );
+    Texture_Clear(&(n_cache->texture));
     if(!*TextCache_font(n_cache)){
         GRAPHICAL_LOG_ERROR("Error while opening TextFontAtla's font: %s\n", SDL_GetError());
         exit(1);
@@ -124,10 +141,6 @@ TextCache* TextCache_Create(SDL_Renderer*r, char *f_path, unsigned ptsize)
         exit(1);
     }
 
-    SDL_SetTextureBlendMode(
-        *TextCache_texture(n_cache),
-        SDL_BLENDMODE_BLEND
-    );
     *TextCache_glyphs(n_cache) = NULL;
 
     return n_cache;

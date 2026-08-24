@@ -9,9 +9,14 @@
 
 #include"GInit.h"
 
-#define GTEST_DELAY 1000
+#define GTEST_DELAY 16
 #define FPS_DELAY 100
 #define ROTATION_DELAY 10000
+
+//
+// Hardware test
+//
+void SimpleWindow();
 
 //
 // GText

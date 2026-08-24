@@ -55,7 +55,8 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
     double chrRotation_rad;
 
     width = 0;
-    lineskip = height = *Text_lineskip(t);
+    height = *Text_lineskip(t) * *Text_scaleHeight(t);
+    lineskip = *Text_lineskip(t);
     width_tmp = height_tmp = 0;
     chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t));
     i = 0;
@@ -89,7 +90,7 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
                 width_tmp = 0;
             }
         }
-        // printf("'%i': (%lf %lf) (%lf %lf)\n", c, chr_width, chr_height, width_tmp - chr_width + *Text_chrDist(t), height - lineskip * *Text_scaleHeight(t));
+        // printf("Text_MeasureUTF8: '%i': (%lf %lf) (%lf %lf)\n", c, chr_width, chr_height, width_tmp - chr_width + *Text_chrDist(t), height - lineskip * *Text_scaleHeight(t));
     }
     width = MAX(width_tmp, width);
 
@@ -97,7 +98,7 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
         *w = (int)floor(width + 1);
     }
     if(h){
-        *h = (int)floor(height + lineskip);
+        *h = (int)floor(height + lineskip * *Text_scaleHeight(t));
     }
 }
 
@@ -142,11 +143,10 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
         GRAPHICAL_LOG_ERROR("Error while creating texture to Text through Text_TextureUTF8 function: %s\n", SDL_GetError());
         exit(1);
     }
+    Texture_Clear(&tex);
     //
     target_prev = SDL_GetRenderTarget(*Texture_renderer(&tex));
     SDL_SetRenderTarget(*Texture_renderer(&tex), *Texture_raw(&tex));
-    //SDL_SetRenderDrawColor(*Texture_renderer(&tex), 255, 255, 255, 0);
-    //SDL_RenderClear(*Texture_renderer(&tex));
 
     chr_x = chr_y = 0;
     lineskip = *Text_lineskip(t);

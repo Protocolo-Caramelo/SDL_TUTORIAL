@@ -2,6 +2,7 @@
 #define GTEXTSPACING_H
 
 #include"GCommons.h"
+#include<SDL2/SDL_pixels.h>
 
 typedef struct TextSpacing TextSpacing;
 typedef enum Spacing Spacing;

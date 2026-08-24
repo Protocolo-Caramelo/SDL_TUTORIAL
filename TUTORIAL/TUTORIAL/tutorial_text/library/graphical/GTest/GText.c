@@ -1,3 +1,4 @@
+#ifdef COMPILATION_DEVQUOTE
 #include"GTest.h"
 
 void Text_Test(char*path, unsigned ptsize, char*str)
@@ -39,7 +40,7 @@ void Text_Test(char*path, unsigned ptsize, char*str)
     Text_SetUTF8(t, str);
 
     *Text_wrap(t) = 1024;
-    *Text_scaleWidth(t) = *Text_scaleHeight(t) = 1 / 5.0;
+    *Text_scaleWidth(t) = *Text_scaleHeight(t) = 1 / 2.0;
     //
     fps = 0;
     fps_delay = SDL_GetTicks();
@@ -47,7 +48,7 @@ void Text_Test(char*path, unsigned ptsize, char*str)
     //
     chrRotation_delay = 0;
     chrRotation = 0;
-    chrFmt = 0;
+    chrFmt = CHAR_FMT_REGULAR; // CHAR_FMT_UNDERLINE | CHAR_FMT_STRIKETHROUGH;
     while(1){
         if((SDL_GetTicks() - fps_delay) >= FPS_DELAY){
             printf("FPS: %.2lf\n", fps);
@@ -59,7 +60,7 @@ void Text_Test(char*path, unsigned ptsize, char*str)
         if((SDL_GetTicks() - chrRotation_delay) >= ROTATION_DELAY){
             chrRotation_delay = SDL_GetTicks();
             chrRotation = 0;
-            // ++chrFmt;
+            ++chrFmt;
             chrFmt %= (CHAR_FMT_REGULAR | CHAR_FMT_BOLD | CHAR_FMT_ITALIC | CHAR_FMT_UNDERLINE | CHAR_FMT_STRIKETHROUGH);
         };
 
@@ -72,8 +73,8 @@ void Text_Test(char*path, unsigned ptsize, char*str)
             (TextConfig){
                 .color=(SDL_Color){0, 0, 255, 255},
                 .fmt = chrFmt,
-                .chr_rotation = chrRotation,
-                // .chr_rotation = 324,
+                // .chr_rotation = chrRotation,
+                .chr_rotation = 90,
                 .rotation = 0
             }
         );
@@ -99,8 +100,8 @@ void Text_Test(char*path, unsigned ptsize, char*str)
         SDL_Delay(GTEST_DELAY);
 
         fps = 1000.0 / (SDL_GetTicks() - time);
-        //chrRotation += (360.0 / ROTATION_DELAY) * (SDL_GetTicks() - time);
-        chrRotation += 360.0 / (ROTATION_DELAY / GTEST_DELAY);
+        chrRotation += (360.0 / ROTATION_DELAY) * (SDL_GetTicks() - time);
         time = SDL_GetTicks();
     }
 }
+#endif
