@@ -237,12 +237,14 @@ void TextCache_AddGlyph(TextCache*a, int c, TextCharFormat fmt)
     // Render Glyph
     prev_target = SDL_GetRenderTarget(*TextCache_renderer(a));
     SDL_SetRenderTarget(*TextCache_renderer(a), *TextCache_texture(a));
+    //*
     SDL_RenderCopy(
         *TextCache_renderer(a),
         chr_tex,
         NULL,
         &dest
     );
+    // */
     SDL_SetRenderTarget(*TextCache_renderer(a), prev_target);
 
     SDL_FreeSurface(chr_surf);

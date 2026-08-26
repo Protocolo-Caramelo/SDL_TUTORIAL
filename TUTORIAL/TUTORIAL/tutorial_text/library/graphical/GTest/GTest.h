@@ -11,7 +11,11 @@
 
 #define GTEST_DELAY 16
 #define FPS_DELAY 100
-#define ROTATION_DELAY 10000
+
+#define CHR_ROTATION_DELAY 10000
+#define CHR_ROTATION_MAX 360.0
+#define TXT_ROTATION_DELAY 10000
+#define TXT_ROTATION_MAX 360.0
 
 //
 // Hardware test

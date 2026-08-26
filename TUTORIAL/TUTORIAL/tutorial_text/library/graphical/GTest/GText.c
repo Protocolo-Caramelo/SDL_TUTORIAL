@@ -14,6 +14,9 @@ void Text_Test(char*path, unsigned ptsize, char*str)
     int chrRotation_delay;
     int chrFmt;
     //
+    double rotation;
+    int rotation_delay;
+    //
     SDL_Window *w;
     SDL_Renderer *r;
     SDL_Event e;
@@ -41,14 +44,15 @@ void Text_Test(char*path, unsigned ptsize, char*str)
 
     *Text_wrap(t) = 1024;
     *Text_scaleWidth(t) = *Text_scaleHeight(t) = 1 / 2.0;
+    // *Text_x(t) = *Text_y(t) = 100;
     //
     fps = 0;
     fps_delay = SDL_GetTicks();
     time = SDL_GetTicks();
     //
     chrRotation_delay = 0;
-    chrRotation = 0;
-    chrFmt = CHAR_FMT_REGULAR; // CHAR_FMT_UNDERLINE | CHAR_FMT_STRIKETHROUGH;
+    chrRotation = rotation_delay = 0;
+    chrFmt = CHAR_FMT_REGULAR;
     while(1){
         if((SDL_GetTicks() - fps_delay) >= FPS_DELAY){
             printf("FPS: %.2lf\n", fps);
@@ -56,27 +60,79 @@ void Text_Test(char*path, unsigned ptsize, char*str)
         }
         // printf("%lf\n", chrRotation);
 
-        // printf("%s %lf\n", str, chrRotation);
-        if((SDL_GetTicks() - chrRotation_delay) >= ROTATION_DELAY){
+        //
+        // Char rotation
+        //
+        if((SDL_GetTicks() - chrRotation_delay) >= CHR_ROTATION_DELAY){
             chrRotation_delay = SDL_GetTicks();
             chrRotation = 0;
             ++chrFmt;
             chrFmt %= (CHAR_FMT_REGULAR | CHAR_FMT_BOLD | CHAR_FMT_ITALIC | CHAR_FMT_UNDERLINE | CHAR_FMT_STRIKETHROUGH);
         };
 
+        //
+        // Text rotation
+        //
+        if(SDL_GetTicks() - rotation_delay >= TXT_ROTATION_DELAY){
+            rotation_delay = SDL_GetTicks();
+            rotation = 0;
+        }
+
+        //
+        //
+        //
         SDL_SetRenderDrawColor(r, 255, 255, 0, 255);
         SDL_RenderClear(r);
-        //*
+
+        // 
+        // Draw text
+        //
+        // printf("%lf\n", rotation);
         Text_DrawUTF8(
             t,
             str,
             (TextConfig){
                 .color=(SDL_Color){0, 0, 255, 255},
-                .fmt = chrFmt,
-                // .chr_rotation = chrRotation,
-                .chr_rotation = 90,
+                // .fmt = chrFmt,
+                .chr_rotation = chrRotation,
+                // .chr_rotation = 90,
+                // .rotation = rotation
                 .rotation = 0
             }
+        );
+
+        /*
+        Text_DrawUTF8(
+            t,
+            str,
+            (TextConfig){
+                .color=(SDL_Color){0, 0, 255, 255},
+                // .fmt = chrFmt,
+                // .chr_rotation = chrRotation,
+                // .chr_rotation = 90,
+                // .rotation = rotation
+                .rotation = 90
+            }
+        );
+        // */
+
+        // */
+        /*
+        int atlas_w, atlas_h;
+        SDL_Rect atlas_d;
+        TextCache_GetAtlasSize(*Text_cache(t), &atlas_w, &atlas_h);
+        printf("%i %i\n", atlas_w, atlas_h);
+        atlas_d = (SDL_Rect){
+            .x = 0,
+            .y = 0,
+            .w = atlas_w,
+            .h = atlas_h
+        };
+        SDL_RenderCopy(
+            r,
+            *TextCache_texture(*Text_cache(t)),
+            NULL,
+            &atlas_d
         );
         // */
 
@@ -100,7 +156,8 @@ void Text_Test(char*path, unsigned ptsize, char*str)
         SDL_Delay(GTEST_DELAY);
 
         fps = 1000.0 / (SDL_GetTicks() - time);
-        chrRotation += (360.0 / ROTATION_DELAY) * (SDL_GetTicks() - time);
+        chrRotation += (CHR_ROTATION_MAX / CHR_ROTATION_DELAY) * (SDL_GetTicks() - time);
+        rotation += (TXT_ROTATION_MAX / TXT_ROTATION_DELAY) * (SDL_GetTicks() - time);
         time = SDL_GetTicks();
     }
 }

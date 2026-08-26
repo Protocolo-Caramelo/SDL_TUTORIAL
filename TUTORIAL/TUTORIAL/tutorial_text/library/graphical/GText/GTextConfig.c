@@ -44,12 +44,12 @@ void TextConfig_Populate(TextConfig*a, TextConfig*b)
     DEFAULT_VALUE(a->fmt, b->fmt);
     DEFAULT_VALUE(a->lineskip, b->lineskip);
     DEFAULT_VALUE(a->wrap, b->wrap);
-    DEFAULT_VALUE(a->rotation, b->rotation);
+    // DEFAULT_VALUE(a->rotation, b->rotation);
     //
     DEFAULT_VALUE(a->scale_width, b->scale_width);
     DEFAULT_VALUE(a->scale_height, b->scale_height);
     //
     DEFAULT_VALUE(a->chr_dist, b->chr_dist);
-    DEFAULT_VALUE(a->chr_rotation, b->chr_rotation);
+    // DEFAULT_VALUE(a->chr_rotation, b->chr_rotation);
     DEFAULT_VALUE(a->chr_flip, b->chr_flip);
 }
