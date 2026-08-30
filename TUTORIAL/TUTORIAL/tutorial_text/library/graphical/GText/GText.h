@@ -18,10 +18,8 @@ struct Text {
     TextCache *cache;
     SDL_Texture* cache_texture;
 
-    TextConfig config;
     char *raw;
-    int x, y;
-    SDL_RendererFlip flip;
+    TextConfig config;
 };
 WRAP_FIELD(Text, cache->texture.renderer, renderer, SDL_Renderer*);
 WRAP_FIELD(Text, cache, TextCache*);
@@ -53,22 +51,22 @@ WRAP_FIELD(Text, config.margin.bottom, marginBottom, unsigned);
 WRAP_FIELD(Text, config.margin.left, marginLeft, unsigned);
 WRAP_FIELD(Text, config.margin.color, marginColor, SDL_Color);
 
-WRAP_FIELD(Text, config.lineskip, lineskip, unsigned);
-WRAP_FIELD(Text, config.fmt, fmt, TextCharFormat);
 WRAP_FIELD(Text, config.color, color, SDL_Color);
+WRAP_FIELD(Text, config.lineskip, lineskip, unsigned);
 WRAP_FIELD(Text, config.wrap, wrap, unsigned);
+WRAP_FIELD(Text, config.rotation, rotation, double);
+WRAP_FIELD(Text, config.flip, flip, SDL_RendererFlip);
 //
 WRAP_FIELD(Text, config.scale_width, scaleWidth, double);
 WRAP_FIELD(Text, config.scale_height, scaleHeight, double);
 
-WRAP_FIELD(Text, config.chr_rotation, chrRotation, double);
 WRAP_FIELD(Text, config.chr_dist, chrDist, int);
+WRAP_FIELD(Text, config.chr_rotation, chrRotation, double);
+WRAP_FIELD(Text, config.chr_fmt, chrFmt, TextCharFormat);
 WRAP_FIELD(Text, config.chr_flip, chrFlip, SDL_RendererFlip);
-WRAP_FIELD(Text, config.rotation, rotation, double);
-/*------------------ */
-WRAP_FIELD(Text, flip, SDL_RendererFlip);
-WRAP_FIELD(Text, x, int);
-WRAP_FIELD(Text, y, int);
+//
+WRAP_FIELD(Text, config.x, x, double);
+WRAP_FIELD(Text, config.y, y, double);
 
 
 //
@@ -82,10 +80,10 @@ void Text_SetUTF8(Text*t, char*);
 
 
 // Measures
-void Text_MeasureUTF8(Text*, int*, int*);
-void Text_MeasurePadding(Text*, int*, int*);
-void Text_MeasureBorder(Text*, int*, int*);
 void Text_MeasureMargin(Text*, int*, int*);
+void Text_MeasureBorder(Text*, int*, int*);
+void Text_MeasurePadding(Text*, int*, int*);
+void Text_MeasureUTF8(Text*, int*, int*);
 
 // Positions
 void Text_PositionMargin(Text*, int*, int*);
@@ -96,16 +94,16 @@ void Text_PositionUTF8(Text*, int*, int*);
 // Textures
 #define TEXT_TEXTURE_PIXELFORMAT SDL_PIXELFORMAT_RGBA8888
 #define TEXT_TEXTURE_ACCESS SDL_TEXTUREACCESS_TARGET
-SDL_Texture* Text_GenTextureUTF8(Text*);
-SDL_Texture* Text_GenTexturePadding(Text*);
-SDL_Texture* Text_GenTextureBorder(Text*);
 SDL_Texture* Text_GenTextureMargin(Text*);
+SDL_Texture* Text_GenTextureBorder(Text*);
+SDL_Texture* Text_GenTexturePadding(Text*);
+SDL_Texture* Text_GenTextureUTF8(Text*);
 
 //
 // Methods
 //
 Text* Text_Create(TextCache*);
-void Text_DrawUTF8(Text*, char*, TextConfig);
+void Text_DrawUTF8(Text*, char*str, TextConfig);
 void Text_Destroy(Text**);
 
 #endif

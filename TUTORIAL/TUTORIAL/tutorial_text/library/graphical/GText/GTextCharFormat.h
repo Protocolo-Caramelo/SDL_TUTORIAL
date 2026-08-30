@@ -7,6 +7,7 @@
 
 typedef enum TextCharFormat TextCharFormat;
 enum TextCharFormat {
+    CHAR_FMT_INVALID        = -1,
     CHAR_FMT_REGULAR        = TTF_STYLE_NORMAL,
     CHAR_FMT_BOLD           = TTF_STYLE_BOLD,
     CHAR_FMT_ITALIC         = TTF_STYLE_ITALIC,

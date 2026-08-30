@@ -19,6 +19,7 @@ target_sources(
         GText/GText.h
         GText/GTextCache.h
         GText/GTextCacheGlyph.h
+        GText/GTextChar.h
         GText/GTextCharFormat.h
         GText/GTextConfig.h
         GText/GTextSpacing.h

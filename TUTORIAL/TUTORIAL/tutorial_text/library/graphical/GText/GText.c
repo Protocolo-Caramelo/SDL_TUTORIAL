@@ -41,96 +41,13 @@ void Text_SetUTF8(Text*t, char*str)
 //
 // Measure
 //
-/*
-void Text_MeasureUTF8(Text*t, int*w, int*h)
-{
-    size_t i;
-    //
-    int lineskip;
-    double width, height;
-    double rotation_rad;
-    double rotation_cos, rotation_sin;;
-    //
-    double dist_x, dist_y;
-    double dist;
-    double tmp;
-    //
-    Glyph *c_glyph;
-    int c;
-    double chr_width, chr_height;
-    double chrRotation_rad;
-    double chrRotation_cos, chrRotation_sin;
 
-    width = 0;
-    height = *Text_lineskip(t) * *Text_scaleHeight(t);
-    lineskip = *Text_lineskip(t);
-    dist_x = dist_y = 0;
-    //
-    rotation_rad = DEG_TO_RAD(*Text_rotation(t));
-    rotation_cos = cos(rotation_rad);
-    rotation_sin = sin(rotation_rad);
-    // chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t) + *Text_rotation(t));
-    chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t));
-    chrRotation_cos = cos(chrRotation_rad);
-    chrRotation_sin = sin(chrRotation_rad);
-    //
-    i = 0;
-    while((c = Text_getUTF8(t, (i++))) != '\0'){
-        chr_width = chr_height = 0;
-        c_glyph = TextCache_GetGlyph(*Text_cache(t), c, *Text_fmt(t));
-
-        chr_width =
-            (
-            c_glyph->w * fabs(chrRotation_cos) * *Text_scaleWidth(t)
-            + c_glyph->h * fabs(chrRotation_sin) * *Text_scaleHeight(t)
-            );
-        chr_height = 
-            (
-            c_glyph->h * fabs(chrRotation_cos) * *Text_scaleHeight(t)
-            + c_glyph->w * fabs(chrRotation_sin) * *Text_scaleWidth(t)
-            );
-        //
-        dist_x += (chr_width + *Text_chrDist(t)) * fabs(rotation_cos);
-        dist_y += (chr_height + *Text_chrDist(t)) * fabs(rotation_sin);
-        dist = dist_x * dist_x + dist_y * dist_y;
-
-        if(
-            c == '\n' ||
-            (*Text_wrap(t) && dist > *Text_wrap(t) * *Text_wrap(t))
-        ){
-            width =
-                MAX(MIN(dist_x, *Text_wrap(t)), width);
-            height = 
-                MAX(MIN(dist_y, *Text_wrap(t)), height);
-
-            width += lineskip * *Text_scaleHeight(t) * rotation_sin;
-            height += lineskip * *Text_scaleHeight(t) * rotation_cos;
-
-            dist_x = chr_width * fabs(rotation_cos);
-            dist_y = chr_height * fabs(rotation_sin);
-        }
-        // printf("Text_MeasureUTF8: '%i': (%lf %lf) (%lf %lf)\n", c, chr_width, chr_height, width_tmp - chr_width + *Text_chrDist(t), height - lineskip * *Text_scaleHeight(t));
-    }
-    width = MAX(dist_x, width);
-    height = MAX(dist_y, height);
-
-    if(w){
-        *w = (int)floor(width + lineskip * *Text_scaleHeight(t));
-    }
-    if(h){
-        *h = (int)floor(height + lineskip * *Text_scaleHeight(t));
-    }
-}
-// */
-
-//*
 void Text_MeasureUTF8(Text*t, int*w, int*h)
 {
     size_t i;
     //
     double width, height;
     double width_tmp, height_tmp;
-    double rotation_rad;
     int lineskip;
     //
     Glyph *c_glyph;
@@ -143,14 +60,12 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
     lineskip = *Text_lineskip(t);
     width_tmp = height_tmp = 0;
     //
-    rotation_rad = DEG_TO_RAD(*Text_rotation(t));
-    chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t) + *Text_rotation(t));
-    // chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t));
+    chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t));
     //
     i = 0;
     while((c = Text_getUTF8(t, (i++))) != '\0'){
         chr_width = chr_height = 0;
-        c_glyph = TextCache_GetGlyph(*Text_cache(t), c, *Text_fmt(t));
+        c_glyph = TextCache_GetGlyph(*Text_cache(t), c, *Text_chrFmt(t));
 
         chr_width =
             (
@@ -197,7 +112,6 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
         *h = height;
     }
 }
-// */
 
 
 //
@@ -215,8 +129,6 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
     SDL_Rect dest;
     //
     int t_width, t_height;
-    double rotation_rad;
-    double rotation_cos, rotation_sin;
     //
     int c;
     double chr_w, chr_h;
@@ -228,10 +140,6 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
     size_t i;
 
     Text_MeasureUTF8(t, &t_width, &t_height);
-    // rotation_rad = DEG_TO_RAD(*Text_rotation(t));
-    rotation_rad = 0;
-    rotation_cos = cos(rotation_rad);
-    rotation_sin = sin(rotation_rad);
     //
     // chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t) + *Text_rotation(t));
     chrRotation_rad = DEG_TO_RAD(*Text_chrRotation(t));
@@ -286,7 +194,7 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
             continue;
         }
 
-        glyph = TextCache_GetGlyph(*Text_cache(t), c, *Text_fmt(t));
+        glyph = TextCache_GetGlyph(*Text_cache(t), c, *Text_chrFmt(t));
         //*
         chr_w =
             (
@@ -340,17 +248,35 @@ Text* Text_Create(TextCache*cache)
     Text *n_t;
 
     n_t = malloc(sizeof(*n_t));
-    memset(n_t, 0, sizeof(*n_t));
 
     *Text_cache(n_t) = cache;
     *Text_cacheTexture(n_t) = NULL;
+    //
     *Text_raw(n_t) = malloc(sizeof(**Text_raw(n_t)));
-    *Text_fmt(n_t) = CHAR_FMT_REGULAR;
-    *Text_lineskip(n_t) = TTF_FontLineSkip(*TextCache_font(cache));
-    *Text_scaleWidth(n_t) = 1;
-    *Text_scaleHeight(n_t) = 1;
-
     *Text_raw(n_t)[0] = '\0';
+    //
+    *Text_config(n_t) = (TextConfig){
+        .padding = (Padding){},
+        .border = (Border){},
+        .margin = (Margin){},
+
+        .color = (SDL_Color){0, 0, 0, 255},
+        .lineskip = TTF_FontLineSkip(*TextCache_font(cache)),
+        .wrap = 0,
+        .rotation = 0,
+        .flip = SDL_FLIP_NONE,
+
+        .scale_width = 1,
+        .scale_height = 1,
+
+        .chr_dist = 0,
+        .chr_rotation = 0,
+        .chr_fmt = CHAR_FMT_REGULAR,
+        .chr_flip = SDL_FLIP_NONE,
+
+        .x = 0,
+        .y = 0,
+    };
 
     return n_t;
 }
@@ -359,7 +285,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig tc)
 {
     TextConfig_Populate(&tc, Text_config(t));
 
-    if(!CHAR_FMT_AVAIBLE(tc.fmt) || !utf8size(str)){
+    if(!CHAR_FMT_AVAIBLE(tc.chr_fmt) || !utf8size(str)){
         GRAPHICAL_LOG_CRITICAL("Error while drawing text into Text_DrawUTF8: no font format avaible or str empty\n");
         return;
     }
@@ -392,6 +318,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig tc)
         *Text_config(t) = tc;
         *Text_cacheTexture(t) = Text_GenTextureUTF8(t);
     }
+    *Text_config(t) = tc;
     SDL_Rect dest;
     SDL_QueryTexture(
         *Text_cacheTexture(t),

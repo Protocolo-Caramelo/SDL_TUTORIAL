@@ -1,7 +1,7 @@
 #ifdef COMPILATION_DEVQUOTE
 #include"GTest.h"
 
-void Text_Test(char*path, unsigned ptsize, char*str)
+void Text_Test1(char*path, unsigned ptsize, char*str)
 {
     Text *t;
     TextCache *cache;
@@ -87,34 +87,16 @@ void Text_Test(char*path, unsigned ptsize, char*str)
         // 
         // Draw text
         //
-        // printf("%lf\n", rotation);
         Text_DrawUTF8(
             t,
             str,
-            (TextConfig){
-                .color=(SDL_Color){0, 0, 255, 255},
-                // .fmt = chrFmt,
+            TextConfig_Create(
+                // .color=(SDL_Color){0, 0, 0, 255},
+                .rotation = rotation,
                 .chr_rotation = chrRotation,
-                // .chr_rotation = 90,
-                // .rotation = rotation
-                .rotation = 0
-            }
+                .chr_fmt = chrFmt,
+            )
         );
-
-        /*
-        Text_DrawUTF8(
-            t,
-            str,
-            (TextConfig){
-                .color=(SDL_Color){0, 0, 255, 255},
-                // .fmt = chrFmt,
-                // .chr_rotation = chrRotation,
-                // .chr_rotation = 90,
-                // .rotation = rotation
-                .rotation = 90
-            }
-        );
-        // */
 
         // */
         /*
