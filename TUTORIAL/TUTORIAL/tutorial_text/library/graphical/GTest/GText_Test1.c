@@ -87,17 +87,18 @@ void Text_Test1(char*path, unsigned ptsize, char*str)
         // 
         // Draw text
         //
+        //*
         Text_DrawUTF8(
             t,
             str,
             TextConfig_Create(
-                // .color=(SDL_Color){0, 0, 0, 255},
+                .color=(SDL_Color){0, 0, 255, 255},
                 .rotation = rotation,
                 .chr_rotation = chrRotation,
                 .chr_fmt = chrFmt,
-            )
+            ),
+            NULL
         );
-
         // */
         /*
         int atlas_w, atlas_h;

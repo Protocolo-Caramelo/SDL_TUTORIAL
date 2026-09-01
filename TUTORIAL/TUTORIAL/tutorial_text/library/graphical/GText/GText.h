@@ -5,6 +5,7 @@
 #include"GTexture.h"
 #include"GTextCache.h"
 #include"GTextConfig.h"
+#include"GTextChar.h"
 #include"GTextCharFormat.h"
 
 #include<utf8.h>
@@ -83,7 +84,7 @@ void Text_SetUTF8(Text*t, char*);
 void Text_MeasureMargin(Text*, int*, int*);
 void Text_MeasureBorder(Text*, int*, int*);
 void Text_MeasurePadding(Text*, int*, int*);
-void Text_MeasureUTF8(Text*, int*, int*);
+void Text_MeasureUTF8(Text*, int*ty, int*tx, int*x, int*y, void(*func)(Text*, TextChar*));
 
 // Positions
 void Text_PositionMargin(Text*, int*, int*);
@@ -94,16 +95,16 @@ void Text_PositionUTF8(Text*, int*, int*);
 // Textures
 #define TEXT_TEXTURE_PIXELFORMAT SDL_PIXELFORMAT_RGBA8888
 #define TEXT_TEXTURE_ACCESS SDL_TEXTUREACCESS_TARGET
-SDL_Texture* Text_GenTextureMargin(Text*);
-SDL_Texture* Text_GenTextureBorder(Text*);
-SDL_Texture* Text_GenTexturePadding(Text*);
-SDL_Texture* Text_GenTextureUTF8(Text*);
+SDL_Texture* Text_GenTextureMargin(Text*, void(*func)(Texture*));
+SDL_Texture* Text_GenTextureBorder(Text*, void(*func)(Texture*));
+SDL_Texture* Text_GenTexturePadding(Text*, void(*func)(Texture*));
+SDL_Texture* Text_GenTextureUTF8(Text*, void(*func)(Text*, TextChar*));
 
 //
 // Methods
 //
 Text* Text_Create(TextCache*);
-void Text_DrawUTF8(Text*, char*str, TextConfig);
+void Text_DrawUTF8(Text*, char*str, TextConfig, void(*func)(Text*, TextChar*));
 void Text_Destroy(Text**);
 
 #endif

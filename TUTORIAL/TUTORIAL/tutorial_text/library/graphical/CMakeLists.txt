@@ -38,9 +38,11 @@ target_sources(
         GText/GTextSpacing.c
 
         GTest/SimpleWindow.c
-        GTest/GText.c
         GTest/GTextCG.c
         GTest/GTextCache.c
+        GTest/GText_Test1.c
+        GTest/GText_Test2.c
+        GTest/GText_Test3.c
     )
 target_link_libraries(
     graphical
