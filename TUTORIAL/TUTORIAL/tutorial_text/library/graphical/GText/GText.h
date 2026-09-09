@@ -3,14 +3,16 @@
 
 #include"GCommons.h"
 #include"GTexture.h"
+#include"GTextTypedefs.h"
 #include"GTextCache.h"
 #include"GTextConfig.h"
 #include"GTextChar.h"
+#include"GTextCharRect.h"
 #include"GTextCharFormat.h"
 
 #include<utf8.h>
 
-typedef struct Text Text;
+typedef enum DRAW_EDGES DRAW_EDGES;
 
 /*
  * Text struct
@@ -68,6 +70,11 @@ WRAP_FIELD(Text, config.chr_flip, chrFlip, SDL_RendererFlip);
 //
 WRAP_FIELD(Text, config.x, x, double);
 WRAP_FIELD(Text, config.y, y, double);
+//
+static inline void (**Text_fAlterText(Text*t))(Text*, TextChar*)
+{
+    return &t->config.func_alterText;
+}
 
 
 //
@@ -84,7 +91,7 @@ void Text_SetUTF8(Text*t, char*);
 void Text_MeasureMargin(Text*, int*, int*);
 void Text_MeasureBorder(Text*, int*, int*);
 void Text_MeasurePadding(Text*, int*, int*);
-void Text_MeasureUTF8(Text*, int*ty, int*tx, int*x, int*y, void(*func)(Text*, TextChar*));
+void Text_MeasureUTF8(Text*, int*x, int*y);
 
 // Positions
 void Text_PositionMargin(Text*, int*, int*);
@@ -95,16 +102,24 @@ void Text_PositionUTF8(Text*, int*, int*);
 // Textures
 #define TEXT_TEXTURE_PIXELFORMAT SDL_PIXELFORMAT_RGBA8888
 #define TEXT_TEXTURE_ACCESS SDL_TEXTUREACCESS_TARGET
-SDL_Texture* Text_GenTextureMargin(Text*, void(*func)(Texture*));
-SDL_Texture* Text_GenTextureBorder(Text*, void(*func)(Texture*));
-SDL_Texture* Text_GenTexturePadding(Text*, void(*func)(Texture*));
-SDL_Texture* Text_GenTextureUTF8(Text*, void(*func)(Text*, TextChar*));
+SDL_Texture* Text_GenTextureMargin(Text*);
+SDL_Texture* Text_GenTextureBorder(Text*);
+SDL_Texture* Text_GenTexturePadding(Text*);
+SDL_Texture* Text_GenTextureUTF8(Text*);
 
 //
 // Methods
 //
 Text* Text_Create(TextCache*);
-void Text_DrawUTF8(Text*, char*str, TextConfig, void(*func)(Text*, TextChar*));
+
+enum DRAW_EDGES {
+    DRAW_EDGE_XMAX,
+    DRAW_EDGE_XMIN,
+    DRAW_EDGE_YMAX,
+    DRAW_EDGE_YMIN
+};
+void Text_DrawUTF8(Text*, char*str, TextConfig, int (*edges)[4]);
+
 void Text_Destroy(Text**);
 
 #endif

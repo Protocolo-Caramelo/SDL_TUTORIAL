@@ -1,6 +1,9 @@
 #ifdef COMPILATION_DEVQUOTE
 #include"GTest.h"
 
+//
+// Alter functions
+//
 typedef enum AngleState {
     ANGLE_REDUCE,
     ANGLE_INCREASE,
@@ -8,32 +11,105 @@ typedef enum AngleState {
 
 double radius;
 double angle;
+double angle_init;
+//
+double cY, cX;
+int cY_min, cX_min;
+//
 int position;
 //
 double minus;
 double minusTax = 0.05;
 AngleState angleState;
 
-void AlterFunc_TextDrawUTF8(Text*t, TextChar*c)
+void AlterFunc_TextDrawUTF8_1(Text*t, TextChar*c)
 {
-    if(c->idx == 0){
+    if(c->chr_textIdx == 0){
         radius = 300;
         angle = 0;
         position = 0;
-        // c->x = -radius;
+        cY_min = 0;
     }
 
     c->x = -radius * cos(DEG_TO_RAD(angle));
-    c->y = -radius * sin(DEG_TO_RAD(angle));
+    c->y = radius * sin(DEG_TO_RAD(angle));
+    c->rotation = DEG_TO_RAD(angle);
+
+    if(cY_min < c->y){
+        cY_min = c->y;
+    }
 
     angle += 360.0 / (Text_GetSizeUTF8(t));
     ++position;
     radius += minus;
 }
 
+//
+void AlterFunc_TextDrawUTF8_2(Text*t, TextChar*c)
+{
+    if(c->chr_textIdx == 0){
+        angle = angle_init;
+        cY = cX = 0;
+    }
+
+    // c->y = 3 * sin(DEG_TO_RAD(angle)) + cY;
+    c->y += 10 * sin(DEG_TO_RAD(c->chr_lineIdx * 5 + angle_init));
+    angle += 5;
+    angle = fmod(angle, 360);
+    // printf("%.2lf\n", angle);
+    // printf("%li %li\n", c->chr_lineIdx, c->line_idx);
+}
+
+//
+double color_init = 0;
+void AlterFunc_TextDrawUTF8_3(Text*t, TextChar*c)
+{
+    if(c->chr_textIdx == 0){
+        color_init += 0.05;
+        color_init = fmod(color_init, Text_GetSizeUTF8(t));
+    }
+
+    //*
+    c->color = (SDL_Color){
+        .r = 255 * ((c->chr_textIdx + (int)color_init) % 10) / 9,
+        .g = 255 * ((c->chr_textIdx + 1 + (int)color_init) % 10) / 9,
+        .b = 255 * ((c->chr_textIdx + 2 + (int)color_init) % 10) / 9,
+        .a = 255
+    };
+    // */
+    c->color.a = 255;
+    // printf("%i %i %i\n", c->color.r, c->color.g, c->color.b);
+}
+
+//
+double dist;
+double dist_init = 0.5, dist_init_tax = 0.005;
+double dist_tax;
+const double dist_min = 0.5, dist_max = 2;
+void AlterFunc_TextDrawUTF8_4(Text*t, TextChar*c)
+{
+    if(c->chr_textIdx == 0){
+        dist = dist_init;
+        dist_tax = 0.1;
+    }
+
+    c->width *= dist;
+    c->height *= dist;
+    //*
+    if(dist > dist_max || dist < dist_min){
+        dist_tax *= -1;
+    }
+    // */
+    dist += dist_tax;
+}
+
+//
+// Main
+//
 void Text_Test2(char*fpath, unsigned ptsize, char*str)
 {
     Text *t;
+    int t_edges[4];
     TextCache *cache;
     //
     double fps;
@@ -67,7 +143,7 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
     fps_delay = 100;
     fps_delayTime = fps_time = SDL_GetTicks();
     //
-    minus = 0;
+    minus = angle_init = 0;
 
     while(1){
         SDL_SetRenderDrawColor(r, 100, 100, 255, 255);
@@ -87,11 +163,57 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
                 .scale_width = 1 / 2.0,
                 .scale_height = 1 / 2.0,
                 .wrap = 1024,
-                .x = 100,
+                .x = 300,
                 .y = 0,
+                .func_alterText = &AlterFunc_TextDrawUTF8_1
             ),
-            &AlterFunc_TextDrawUTF8
-            // NULL
+            &t_edges
+        );
+        // */
+        //*
+        Text_DrawUTF8(
+            t,
+            str,
+            TextConfig_Create(
+                .color = (SDL_Color){155, 155, 0, 255},
+                .scale_width = 1 / 2.0,
+                .scale_height = 1 / 2.0,
+                .wrap = 1024,
+                .x = t_edges[DRAW_EDGE_XMIN],
+                .y = t_edges[DRAW_EDGE_YMAX] + 9,
+                .func_alterText = &AlterFunc_TextDrawUTF8_2,
+                // .func_alterText = NULL
+            ),
+            &t_edges
+        );
+        // */
+        //*
+        Text_DrawUTF8(
+            t,
+            str,
+            TextConfig_Create(
+                .x = t_edges[DRAW_EDGE_XMIN],
+                .y = t_edges[DRAW_EDGE_YMAX],
+                .wrap = 0,
+                .func_alterText = &AlterFunc_TextDrawUTF8_3
+            ),
+            NULL
+        );
+        // */
+        //*
+        Text_DrawUTF8(
+            t,
+            // str,
+            "It works! Look this geometry!",
+            TextConfig_Create(
+                .color = (SDL_Color){155, 155, 0, 255},
+                .scale_height = 1 / 2.0,
+                .scale_width = 1 / 2.0,
+                .x = 600,
+                .y = 0,
+                .func_alterText = &AlterFunc_TextDrawUTF8_4,
+            ),
+            NULL
         );
         // */
 
@@ -111,10 +233,11 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
 
         SDL_RenderPresent(r);
         SDL_Delay(GTEST_DELAY);
+        // SDL_Delay(100);
 
         fps = 1000.0 / (SDL_GetTicks() - fps_time);
         fps_time = SDL_GetTicks();
-        //
+        // minus
         if(angleState == ANGLE_REDUCE){
             minus -= minusTax;
         }
@@ -122,11 +245,19 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
             minus += minusTax;
         }
 
-        if(minus <= - 10){
+        if(minus <= - 4.9){
             angleState = ANGLE_INCREASE;
         }
         else if(minus >= 0){
             angleState = ANGLE_REDUCE;
+        }
+        // angle_init
+        angle_init += 4;
+        angle_init = fmod(angle_init, 360);
+        // dist_tax
+        dist_init += dist_init_tax;
+        if(dist_init >= dist_max || dist_init <= dist_min){
+            dist_init_tax *= -1;
         }
     }
 }

@@ -3,10 +3,9 @@
 
 #include"GCommons.h"
 #include"GTexture.h"
+#include"GTextTypedefs.h"
 #include"GTextCharFormat.h"
 #include"GTextCacheGlyph.h"
-
-typedef struct TextCache TextCache;
 
 #define TEXTFA_TEXTURE_PIXELFORMAT          SDL_PIXELFORMAT_RGBA8888
 #define TEXTFA_TEXTURE_ACCESS               SDL_TEXTUREACCESS_TARGET

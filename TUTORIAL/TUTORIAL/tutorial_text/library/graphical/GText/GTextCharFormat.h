@@ -5,7 +5,6 @@
 
 #define CHAR_FMT_AVAIBLE(fmt) (fmt & CHAR_FMT_STRIKETHROUGH || fmt & CHAR_FMT_UNDERLINE || fmt & CHAR_FMT_ITALIC || fmt & CHAR_FMT_BOLD || fmt == CHAR_FMT_REGULAR)
 
-typedef enum TextCharFormat TextCharFormat;
 enum TextCharFormat {
     CHAR_FMT_INVALID        = -1,
     CHAR_FMT_REGULAR        = TTF_STYLE_NORMAL,

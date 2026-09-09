@@ -20,9 +20,11 @@ target_sources(
         GText/GTextCache.h
         GText/GTextCacheGlyph.h
         GText/GTextChar.h
+        GText/GTextCharRect.h
         GText/GTextCharFormat.h
         GText/GTextConfig.h
         GText/GTextSpacing.h
+        GText/GTextTypedefs.h
 
         GTest/GTest.h
 

@@ -2,12 +2,13 @@
 #define GTEXTFONTGLYPH_H
 
 #include"GCommons.h"
+#include"GTextTypedefs.h"
 #include"GTextCharFormat.h"
-#include"GTextGlyph.h"
+
+#include<SDL2/SDL_rect.h>
 #include<uthash.h>
 
-typedef struct TextCacheGlyph TextCG;
-typedef struct TextCacheGlyphKey TextCGK;
+typedef SDL_Rect Glyph;
 
 struct TextCacheGlyphKey{
     int c;

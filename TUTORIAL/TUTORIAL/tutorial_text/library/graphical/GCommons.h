@@ -116,5 +116,6 @@ static inline type* strct##_##name(strct*s) \
 #define MIN(a, b) ((a) > (b)? (b): (a))
 #define RAD_TO_DEG(r) (180 / M_PI * (r))
 #define DEG_TO_RAD(d) (M_PI / 180 * (d))
+#define INVALID_PTR (void*)0xDEADBEEF
 
 #endif

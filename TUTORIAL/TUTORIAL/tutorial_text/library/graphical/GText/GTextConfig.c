@@ -29,6 +29,9 @@ int TextConfig_Equals(TextConfig*a, TextConfig*b)
         //
         // && a->x == b->x
         // && a->y == b->y
+        //
+        // && a->func_alterMargin == b->func_alterMargin
+        // && a->func_alterPadding == b->func_alter
         ;
 }
 
@@ -70,4 +73,14 @@ void TextConfig_Populate(TextConfig*a, TextConfig*b)
     if(isnan(a->y)){
         a->y = b->y;
     }
+    //
+    /*
+    if(a->func_alter == (void*)0xDEADBEEF){
+        a->func_alter = b->func_alter;
+    }
+    // */
+    DEFAULT_VALUE(a->func_alterMargin, b->func_alterMargin, INVALID_PTR);
+    DEFAULT_VALUE(a->func_alterBorder, b->func_alterBorder, INVALID_PTR);
+    DEFAULT_VALUE(a->func_alterPadding, b->func_alterPadding, INVALID_PTR);
+    DEFAULT_VALUE(a->func_alterText, b->func_alterText, INVALID_PTR);
 }

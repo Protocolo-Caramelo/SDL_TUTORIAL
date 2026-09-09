@@ -1,10 +1,11 @@
 #ifndef GTEXTCONFIG_H
 #define GTEXTCONFIG_H
 
+#include"GTexture.h"
 #include"GTextSpacing.h"
+#include"GTextTypedefs.h"
+#include"GTextChar.h"
 #include"GTextCharFormat.h"
-
-typedef struct TextConfig TextConfig;
 
 typedef TextSpacing Padding;
 typedef TextSpacing Border;
@@ -30,6 +31,12 @@ struct TextConfig {
     SDL_RendererFlip chr_flip;
     //
     double x, y;
+    
+    //
+    void(*func_alterMargin)(Text*, Texture*);
+    void(*func_alterBorder)(Text*, Texture*);
+    void(*func_alterPadding)(Text*, Texture*);
+    void(*func_alterText)(Text*, TextChar*);
 };
 
 // 
@@ -56,6 +63,12 @@ struct TextConfig {
     \
     .x = NAN, \
     .y = NAN, \
+    \
+    .func_alterMargin = INVALID_PTR, \
+    .func_alterBorder = INVALID_PTR, \
+    .func_alterPadding = INVALID_PTR, \
+    .func_alterText = INVALID_PTR, \
+    \
     ##__VA_ARGS__ \
 }
 
