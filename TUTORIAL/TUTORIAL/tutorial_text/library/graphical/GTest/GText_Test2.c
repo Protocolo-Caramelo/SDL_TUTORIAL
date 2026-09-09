@@ -204,13 +204,13 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
         Text_DrawUTF8(
             t,
             // str,
-            "It works! Look this geometry!",
+            "It works! Look at this geometry!",
             TextConfig_Create(
                 .color = (SDL_Color){155, 155, 0, 255},
                 .scale_height = 1 / 2.0,
                 .scale_width = 1 / 2.0,
                 .x = 600,
-                .y = 0,
+                .y = 100,
                 .func_alterText = &AlterFunc_TextDrawUTF8_4,
             ),
             NULL

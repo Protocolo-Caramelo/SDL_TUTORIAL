@@ -4,10 +4,11 @@
 #include"GTextTypedefs.h"
 
 struct TextCharRect {
-    Glyph *src;
+    Glyph *src; // from cache
     int x, y;
     int width, height;
     double rotation;
+    SDL_Color color;
 };
 
 #endif
