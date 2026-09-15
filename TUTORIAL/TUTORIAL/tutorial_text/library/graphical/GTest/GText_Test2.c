@@ -109,7 +109,7 @@ void AlterFunc_TextDrawUTF8_4(Text*t, TextChar*c)
 void Text_Test2(char*fpath, unsigned ptsize, char*str)
 {
     Text *t;
-    int t_edges[4];
+    int t_edges[20];
     TextCache *cache;
     //
     double fps;
@@ -165,7 +165,16 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
                 .wrap = 1024,
                 .x = 300,
                 .y = 0,
-                .func_alterText = &AlterFunc_TextDrawUTF8_1
+                .func_alterText = &AlterFunc_TextDrawUTF8_1,
+
+                .margin.top = 10,
+                .margin.bottom = 10,
+                .margin.right = 10,
+                .margin.left = 10,
+                .margin.color = (SDL_Color){255, 0, 0, 255},
+
+                .bx_width = 0,
+                .bx_height = 0,
             ),
             &t_edges
         );
@@ -178,11 +187,12 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
                 .color = (SDL_Color){155, 155, 0, 255},
                 .scale_width = 1 / 2.0,
                 .scale_height = 1 / 2.0,
-                .wrap = 1024,
                 .x = t_edges[DRAW_EDGE_XMIN],
                 .y = t_edges[DRAW_EDGE_YMAX] + 9,
                 .func_alterText = &AlterFunc_TextDrawUTF8_2,
-                // .func_alterText = NULL
+                //
+                .margin.color = (SDL_Color){0, 255, 0, 255},
+                .margin.right = 50
             ),
             &t_edges
         );
@@ -194,8 +204,10 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
             TextConfig_Create(
                 .x = t_edges[DRAW_EDGE_XMIN],
                 .y = t_edges[DRAW_EDGE_YMAX],
-                .wrap = 0,
-                .func_alterText = &AlterFunc_TextDrawUTF8_3
+                .func_alterText = &AlterFunc_TextDrawUTF8_3,
+                //
+                .margin.left = 0,
+                .margin.right = 0,
             ),
             NULL
         );

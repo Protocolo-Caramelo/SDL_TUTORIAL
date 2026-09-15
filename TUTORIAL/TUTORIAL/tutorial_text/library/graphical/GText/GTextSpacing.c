@@ -3,6 +3,26 @@
 //
 // Methods
 //
+void TextSpacing_Populate(TextSpacing*a, TextSpacing*b)
+{
+    if(a->top == TEXTSPACING_UNINITIALIZED_VAL){
+        a->top = b->top;
+    }
+    if(a->bottom == TEXTSPACING_UNINITIALIZED_VAL){
+        a->bottom = b->bottom;
+    }
+    if(a->right == TEXTSPACING_UNINITIALIZED_VAL){
+        a->right = b->right;
+    }
+    if(a->left == TEXTSPACING_UNINITIALIZED_VAL){
+        a->left = b->left;
+    }
+
+    if(a->color.r == 0 && a->color.g == 0 && a->color.b == 0 && a->color.a == 0){
+        a->color = b->color;
+    }
+}
+
 int TextSpacing_Equals(TextSpacing*a, TextSpacing*b)
 {
     return 
@@ -21,14 +41,9 @@ int TextSpacing_Equals(TextSpacing*a, TextSpacing*b)
 int TextSpacing_Zered(TextSpacing*a)
 {
     return 
-        a->left == 0
-        && a->right == 0
-        && a->top == 0
-        && a->bottom == 0
-
-        && a->color.a == 0
-        && a->color.r == 0
-        && a->color.g == 0
-        && a->color.b == 0
+        a->left == TEXTSPACING_UNINITIALIZED_VAL
+        && a->right == TEXTSPACING_UNINITIALIZED_VAL
+        && a->top == TEXTSPACING_UNINITIALIZED_VAL
+        && a->bottom == TEXTSPACING_UNINITIALIZED_VAL
         ;
 }

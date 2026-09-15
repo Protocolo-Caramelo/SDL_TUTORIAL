@@ -22,6 +22,9 @@ int TextConfig_Equals(TextConfig*a, TextConfig*b)
         && a->scale_width == b->scale_width
         && a->scale_height == b->scale_height
         //
+        && a->bx_width == b->bx_width
+        && a->bx_height == b->bx_height
+        //
         && a->chr_dist == b->chr_dist
         && a->chr_fmt == b->chr_fmt
         && a->chr_rotation == b->chr_rotation
@@ -37,48 +40,41 @@ int TextConfig_Equals(TextConfig*a, TextConfig*b)
 
 void TextConfig_Populate(TextConfig*a, TextConfig*b)
 {
-    if(TextSpacing_Zered(&a->padding)){
-        a->padding = b->padding;
-    }
-    if(TextSpacing_Zered(&a->border)){
-        a->border = b->border;
-    }
-    if(TextSpacing_Zered(&a->margin)){
-        a->margin = b->margin;
-    }
+    /*
+    printf(
+        "(%i %i %i %i)\n", 
+        a->margin.top,
+        a->margin.bottom,
+        a->margin.right,
+        a->margin.left
+    );
+    // */
+    TextSpacing_Populate(&a->padding, &b->padding);
+    TextSpacing_Populate(&a->border, &b->border);
+    TextSpacing_Populate(&a->margin, &b->margin);
 
     if(a->color.r == 0 && a->color.g == 0 && a->color.b == 0 && a->color.a == 0){
         a->color = b->color;
     }
-    DEFAULT_VALUE(a->lineskip, b->lineskip);
-    DEFAULT_VALUE(a->wrap, b->wrap);
-    if(isnan(a->rotation)){
-        a->rotation = b->rotation;
-    }
-    DEFAULT_VALUE(a->flip, b->flip, (SDL_FLIP_VERTICAL + 1));
+    DEFAULT_VALUE(a->lineskip, b->lineskip, INVALID_VAL);
+    DEFAULT_VALUE(a->wrap, b->wrap, INVALID_VAL);
+    DEFAULT_VALUE(a->rotation, b->rotation, INVALID_VAL);
+    DEFAULT_VALUE(a->flip, b->flip, INVALID_VAL);
     //
-    DEFAULT_VALUE(a->scale_width, b->scale_width);
-    DEFAULT_VALUE(a->scale_height, b->scale_height);
+    DEFAULT_VALUE(a->bx_width, b->bx_width, INVALID_VAL);
+    DEFAULT_VALUE(a->bx_height, b->bx_height, INVALID_VAL);
     //
-    DEFAULT_VALUE(a->chr_dist, b->chr_dist);
-    if(isnan(a->chr_rotation)){
-        a->chr_rotation = b->chr_rotation;
-    }
-    DEFAULT_VALUE(a->chr_fmt, b->chr_fmt, CHAR_FMT_INVALID);
-    DEFAULT_VALUE(a->chr_flip, b->chr_flip, (SDL_FLIP_VERTICAL + 1));
+    DEFAULT_VALUE(a->scale_width, b->scale_width, INVALID_VAL);
+    DEFAULT_VALUE(a->scale_height, b->scale_height, INVALID_VAL);
     //
-    if(isnan(a->x)){
-        a->x = b->x;
-    }
-    if(isnan(a->y)){
-        a->y = b->y;
-    }
+    DEFAULT_VALUE(a->chr_dist, b->chr_dist, INVALID_VAL);
+    DEFAULT_VALUE(a->chr_rotation, b->chr_rotation, INVALID_VAL);
+    DEFAULT_VALUE(a->chr_fmt, b->chr_fmt, INVALID_VAL);
+    DEFAULT_VALUE(a->chr_flip, b->chr_flip, INVALID_VAL);
     //
-    /*
-    if(a->func_alter == (void*)0xDEADBEEF){
-        a->func_alter = b->func_alter;
-    }
-    // */
+    DEFAULT_VALUE(a->x, b->x, INVALID_VAL);
+    DEFAULT_VALUE(a->y, b->y, INVALID_VAL);
+    //
     DEFAULT_VALUE(a->func_alterMargin, b->func_alterMargin, INVALID_PTR);
     DEFAULT_VALUE(a->func_alterBorder, b->func_alterBorder, INVALID_PTR);
     DEFAULT_VALUE(a->func_alterPadding, b->func_alterPadding, INVALID_PTR);

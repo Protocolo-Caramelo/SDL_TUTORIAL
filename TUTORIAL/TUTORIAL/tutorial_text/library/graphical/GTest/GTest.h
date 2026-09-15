@@ -30,7 +30,7 @@ void TextCG_Test();
 void TextCache_Test(char*fpath, unsigned ptsize);
 void Text_Test1(char*fpath, unsigned ptsize, char*);
 void Text_Test2(char*fpath, unsigned ptsize, char*);
-void Text_Test3(char*fpath, unsigned ptsize);
+void Text_Test3(char*fpath, unsigned ptsize, char*);
 
 #endif
 #endif

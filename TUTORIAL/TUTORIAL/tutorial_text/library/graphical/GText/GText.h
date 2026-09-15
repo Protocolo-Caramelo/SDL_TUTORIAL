@@ -19,14 +19,17 @@ typedef enum DRAW_EDGES DRAW_EDGES;
  */
 struct Text {
     TextCache *cache;
-    SDL_Texture* cache_texture;
+    SDL_Texture *cache_margin;
+    SDL_Texture *cache_border;
+    SDL_Texture *cache_padding;
+    SDL_Texture *cache_text;
+    SDL_Texture *cache_texture;
 
     char *raw;
     TextConfig config;
 };
 WRAP_FIELD(Text, cache->texture.renderer, renderer, SDL_Renderer*);
 WRAP_FIELD(Text, cache, TextCache*);
-WRAP_FIELD(Text, cache_texture, cacheTexture, SDL_Texture*);
 
 WRAP_FIELD(Text, raw, char*);
 
@@ -39,6 +42,7 @@ WRAP_FIELD(Text, config.padding.right, paddingRight, unsigned);
 WRAP_FIELD(Text, config.padding.bottom, paddingBottom, unsigned);
 WRAP_FIELD(Text, config.padding.left, paddingLeft, unsigned);
 WRAP_FIELD(Text, config.padding.color, paddingColor, SDL_Color);
+WRAP_FIELD(Text, cache_padding, paddingCache, SDL_Texture*);
 
 WRAP_FIELD(Text, config.border, border, TextSpacing);
 WRAP_FIELD(Text, config.border.top, borderTop, unsigned);
@@ -46,6 +50,7 @@ WRAP_FIELD(Text, config.border.right, borderRight, unsigned);
 WRAP_FIELD(Text, config.border.bottom, borderBottom, unsigned);
 WRAP_FIELD(Text, config.border.left, borderLeft, unsigned);
 WRAP_FIELD(Text, config.border.color, borderColor, SDL_Color);
+WRAP_FIELD(Text, cache_border, borderCache, SDL_Texture*);
 
 WRAP_FIELD(Text, config.margin, margin, TextSpacing);
 WRAP_FIELD(Text, config.margin.top, marginTop, unsigned);
@@ -53,12 +58,16 @@ WRAP_FIELD(Text, config.margin.right, marginRight, unsigned);
 WRAP_FIELD(Text, config.margin.bottom, marginBottom, unsigned);
 WRAP_FIELD(Text, config.margin.left, marginLeft, unsigned);
 WRAP_FIELD(Text, config.margin.color, marginColor, SDL_Color);
+WRAP_FIELD(Text, cache_margin, marginCache, SDL_Texture*);
 
 WRAP_FIELD(Text, config.color, color, SDL_Color);
 WRAP_FIELD(Text, config.lineskip, lineskip, unsigned);
 WRAP_FIELD(Text, config.wrap, wrap, unsigned);
 WRAP_FIELD(Text, config.rotation, rotation, double);
 WRAP_FIELD(Text, config.flip, flip, SDL_RendererFlip);
+//
+WRAP_FIELD(Text, config.bx_width, boxWidthText, int);
+WRAP_FIELD(Text, config.bx_height, boxHeightText, int);
 //
 WRAP_FIELD(Text, config.scale_width, scaleWidth, double);
 WRAP_FIELD(Text, config.scale_height, scaleHeight, double);
@@ -71,9 +80,28 @@ WRAP_FIELD(Text, config.chr_flip, chrFlip, SDL_RendererFlip);
 WRAP_FIELD(Text, config.x, x, double);
 WRAP_FIELD(Text, config.y, y, double);
 //
+WRAP_FIELD(Text, cache_text, textCache, SDL_Texture*);
+WRAP_FIELD(Text, cache_texture, cacheTexture, SDL_Texture*);
+
+
 static inline void (**Text_fAlterText(Text*t))(Text*, TextChar*)
 {
     return &t->config.func_alterText;
+}
+
+static inline void (**Text_fAlterPadding(Text*t))(Text*, Texture*)
+{
+    return &t->config.func_alterPadding;
+}
+
+static inline void (**Text_fAlterBorder(Text*t))(Text*, Texture*)
+{
+    return &t->config.func_alterBorder;
+}
+
+static inline void (**Text_fAlterMargin(Text*t))(Text*, Texture*)
+{
+    return &t->config.func_alterMargin;
 }
 
 
@@ -82,6 +110,7 @@ static inline void (**Text_fAlterText(Text*t))(Text*, TextChar*)
 // 
 int Text_getUTF8(Text*, size_t );
 size_t Text_GetSizeUTF8(Text*t);
+size_t Text_GetLenUTF8(Text*t);
 
 char* Text_GetUTF8(Text*t);
 void Text_SetUTF8(Text*t, char*);
@@ -102,9 +131,12 @@ void Text_PositionUTF8(Text*, int*, int*);
 // Textures
 #define TEXT_TEXTURE_PIXELFORMAT SDL_PIXELFORMAT_RGBA8888
 #define TEXT_TEXTURE_ACCESS SDL_TEXTUREACCESS_TARGET
+//
+SDL_Texture* Text_GenTextureSpacing(Text*t, int w, int h, SDL_Color*c, void(*f_alterTexture)(Text*, Texture*));
 SDL_Texture* Text_GenTextureMargin(Text*);
 SDL_Texture* Text_GenTextureBorder(Text*);
 SDL_Texture* Text_GenTexturePadding(Text*);
+//
 SDL_Texture* Text_GenTextureUTF8(Text*);
 
 //
@@ -116,9 +148,29 @@ enum DRAW_EDGES {
     DRAW_EDGE_XMAX,
     DRAW_EDGE_XMIN,
     DRAW_EDGE_YMAX,
-    DRAW_EDGE_YMIN
+    DRAW_EDGE_YMIN,
+
+    DRAW_EDGE_MARGIN_XMAX,
+    DRAW_EDGE_MARGIN_XMIN,
+    DRAW_EDGE_MARGIN_YMAX,
+    DRAW_EDGE_MARGIN_YMIN,
+
+    DRAW_EDGE_BORDER_XMAX,
+    DRAW_EDGE_BORDER_XMIN,
+    DRAW_EDGE_BORDER_YMAX,
+    DRAW_EDGE_BORDER_YMIN,
+
+    DRAW_EDGE_PADDING_XMAX,
+    DRAW_EDGE_PADDING_XMIN,
+    DRAW_EDGE_PADDING_YMAX,
+    DRAW_EDGE_PADDING_YMIN,
+
+    DRAW_EDGE_TEXT_XMAX,
+    DRAW_EDGE_TEXT_XMIN,
+    DRAW_EDGE_TEXT_YMAX,
+    DRAW_EDGE_TEXT_YMIN,
 };
-void Text_DrawUTF8(Text*, char*str, TextConfig, int (*edges)[4]);
+void Text_DrawUTF8(Text*, char*str, TextConfig*tc, int (*edges)[20]);
 
 void Text_Destroy(Text**);
 

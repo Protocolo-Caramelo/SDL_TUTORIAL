@@ -6,6 +6,9 @@
 #include"GTextTypedefs.h"
 #include"GTextChar.h"
 #include"GTextCharFormat.h"
+#include<limits.h>
+
+#define INVALID_VAL INT_MAX
 
 typedef TextSpacing Padding;
 typedef TextSpacing Border;
@@ -21,6 +24,9 @@ struct TextConfig {
     unsigned wrap;
     double rotation;
     SDL_RendererFlip flip;
+    // Text box size
+    int bx_width;
+    int bx_height;
     //
     double scale_width;
     double scale_height;
@@ -42,27 +48,41 @@ struct TextConfig {
 // 
 // Methods
 //
-#define TextConfig_Create(...) (TextConfig){ \
-    .padding = (Padding){}, \
-    .border = (Border){}, \
-    .margin = (Border){}, \
+#define TextConfig_Create(...) &(TextConfig){ \
+    .padding.left = TEXTSPACING_UNINITIALIZED_VAL, \
+    .padding.right = TEXTSPACING_UNINITIALIZED_VAL, \
+    .padding.top = TEXTSPACING_UNINITIALIZED_VAL, \
+    .padding.bottom = TEXTSPACING_UNINITIALIZED_VAL, \
+    \
+    .border.left = TEXTSPACING_UNINITIALIZED_VAL, \
+    .border.right = TEXTSPACING_UNINITIALIZED_VAL, \
+    .border.top = TEXTSPACING_UNINITIALIZED_VAL, \
+    .border.bottom = TEXTSPACING_UNINITIALIZED_VAL, \
+    \
+    .margin.left = TEXTSPACING_UNINITIALIZED_VAL, \
+    .margin.right = TEXTSPACING_UNINITIALIZED_VAL, \
+    .margin.top = TEXTSPACING_UNINITIALIZED_VAL, \
+    .margin.bottom = TEXTSPACING_UNINITIALIZED_VAL, \
     \
     .color = (SDL_Color){}, \
-    .lineskip = 0, \
-    .wrap = 0, \
-    .rotation = NAN, \
-    .flip = (SDL_FLIP_VERTICAL + 1), \
+    .lineskip = INVALID_VAL, \
+    .wrap = INVALID_VAL, \
+    .rotation = INVALID_VAL, \
+    .flip = INVALID_VAL, \
     \
-    .scale_width = 0, \
-    .scale_height = 0, \
+    .bx_width = INVALID_VAL, \
+    .bx_height = INVALID_VAL, \
     \
-    .chr_dist = 0, \
-    .chr_rotation = NAN, \
-    .chr_fmt = CHAR_FMT_INVALID, \
-    .chr_flip = (SDL_FLIP_VERTICAL + 1), \
+    .scale_width = INVALID_VAL, \
+    .scale_height = INVALID_VAL, \
     \
-    .x = NAN, \
-    .y = NAN, \
+    .chr_dist = INVALID_VAL, \
+    .chr_rotation = INVALID_VAL, \
+    .chr_fmt = INVALID_VAL, \
+    .chr_flip = INVALID_VAL, \
+    \
+    .x = INVALID_VAL, \
+    .y = INVALID_VAL, \
     \
     .func_alterMargin = INVALID_PTR, \
     .func_alterBorder = INVALID_PTR, \
