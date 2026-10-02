@@ -20,6 +20,7 @@ struct TextConfig {
     Margin margin;
 
     SDL_Color color;
+    SDL_Color color_bg;
     unsigned lineskip;
     unsigned wrap;
     double rotation;
@@ -65,6 +66,7 @@ struct TextConfig {
     .margin.bottom = TEXTSPACING_UNINITIALIZED_VAL, \
     \
     .color = (SDL_Color){}, \
+    .color_bg = (SDL_Color){}, \
     .lineskip = INVALID_VAL, \
     .wrap = INVALID_VAL, \
     .rotation = INVALID_VAL, \
@@ -94,5 +96,6 @@ struct TextConfig {
 
 int TextConfig_Equals(TextConfig*, TextConfig*);
 void TextConfig_Populate(TextConfig*, TextConfig*);
+void TextConfig_PopulateInv(TextConfig*, TextConfig*);
 
 #endif

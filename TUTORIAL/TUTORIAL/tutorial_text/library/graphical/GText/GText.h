@@ -61,6 +61,7 @@ WRAP_FIELD(Text, config.margin.color, marginColor, SDL_Color);
 WRAP_FIELD(Text, cache_margin, marginCache, SDL_Texture*);
 
 WRAP_FIELD(Text, config.color, color, SDL_Color);
+WRAP_FIELD(Text, config.color_bg, colorBackground, SDL_Color);
 WRAP_FIELD(Text, config.lineskip, lineskip, unsigned);
 WRAP_FIELD(Text, config.wrap, wrap, unsigned);
 WRAP_FIELD(Text, config.rotation, rotation, double);
@@ -109,12 +110,14 @@ static inline void (**Text_fAlterMargin(Text*t))(Text*, Texture*)
 // Properties
 // 
 int Text_getUTF8(Text*, size_t );
+
 size_t Text_GetSizeUTF8(Text*t);
 size_t Text_GetLenUTF8(Text*t);
-
 char* Text_GetUTF8(Text*t);
+
 void Text_SetUTF8(Text*t, char*);
 
+void Text_UpdateConfig(Text*t, TextConfig*);
 
 // Measures
 void Text_MeasureMargin(Text*, int*, int*);

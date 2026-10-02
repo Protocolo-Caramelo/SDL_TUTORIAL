@@ -18,6 +18,92 @@
 
 static unsigned bitmask;
 
+void draw_edges(
+    Text*t, int t_width, int t_height,
+    TextSpacing*ts,
+    int xmax, int xmin, int ymax, int ymin,
+    unsigned addr_top, unsigned addr_right, unsigned addr_bottom, unsigned addr_left
+)
+{
+    int edgeT_x, edgeT_y;
+    int edgeT_r;
+    int edgeT_bw, edgeT_bh;
+
+    if(bitmask & addr_top){
+        edgeT_bh = ts->top + 1;
+        edgeT_x = xmin / 2 + xmax / 2 - t_width / 2;
+        edgeT_y = ymin;
+        edgeT_r = 0;
+        //
+        Text_DrawUTF8(
+            t,
+            NULL,
+            TextConfig_Create(
+                .x = edgeT_x,
+                .y = edgeT_y,
+                .rotation = edgeT_r,
+                .bx_height = edgeT_bh
+            ),
+            NULL
+        );
+    }
+    if(bitmask & addr_right){
+        edgeT_bh = ts->right + 1;
+        edgeT_x = xmax - t_width / 2 - MIN(edgeT_bh, t_height) / 2;
+        edgeT_y = ymin / 2 + ymax / 2;
+        edgeT_r = 90;
+        //
+        Text_DrawUTF8(
+            t,
+            NULL,
+            TextConfig_Create(
+                .x = edgeT_x,
+                .y = edgeT_y,
+                .rotation = edgeT_r,
+                .bx_height = edgeT_bh
+            ),
+            NULL
+        );
+    }
+    if(bitmask & addr_bottom){
+        edgeT_bh = ts->bottom + 1;
+        edgeT_x = xmin / 2 + xmax / 2 - t_width / 2;
+        edgeT_y = ymax - MIN(edgeT_bh, t_height);
+        edgeT_r = 180;
+        //
+        Text_DrawUTF8(
+            t,
+            NULL,
+            TextConfig_Create(
+                .x = edgeT_x,
+                .y = edgeT_y,
+                .rotation = edgeT_r,
+                .bx_height = edgeT_bh
+            ),
+            NULL
+        );
+    }
+    if(bitmask & addr_left){
+        edgeT_bh = ts->left + 1;
+        edgeT_x = xmin - t_width / 2 + MIN(t_height, edgeT_bh) / 2;
+        edgeT_y = ymin / 2 + ymax / 2;
+        edgeT_r = 270;
+        //
+        Text_DrawUTF8(
+            t,
+            NULL,
+            TextConfig_Create(
+                .x = edgeT_x,
+                .y = edgeT_y,
+                .rotation = edgeT_r,
+                .bx_height = edgeT_bh
+            ),
+            NULL
+        );
+    }
+    // */
+}
+
 void Text_Test3(char*fpath, unsigned ptsize, char*str)
 {
     SDL_Window *w;
@@ -29,6 +115,12 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     Margin t_margin;
     Border t_border;
     Padding t_padding;
+    int t_edges[20];
+    //
+    TextConfig edges_config;
+    Text *padding_t, *border_t, *margin_t;
+    int paddingT_width, borderT_width, marginT_width;
+    int paddingT_height, borderT_height, marginT_height;
     //
     unsigned time;
     //
@@ -38,11 +130,12 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     const unsigned spacing_timeDelay = 16;
     char spacing_str[100] = "";
     //
+    Text *fps_t;
     double fps;
     unsigned fps_time;
     unsigned fps_deltaTime;
     const unsigned fps_timeDelay = 100;
-    char fps_str[20] = "FPS: 60";
+    char fps_str[20] = "FPS: 60.00";
 
     graphical_init();
     //
@@ -62,9 +155,46 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     //
     cache = TextCache_Create(r, fpath, ptsize);
     t = Text_Create(cache);
+    Text_UpdateConfig(t, TextConfig_Create(
+        .color = (SDL_Color){255, 255, 0, 255},
+        .color_bg = (SDL_Color){255, 0, 255, 255},
+        .scale_width = 1 / 2.0,
+        .scale_height = 1 / 2.0,
+        .wrap = 434,
+        .x = 0,
+        .y = 0,
+    ));
     t_margin = *Text_margin(t);
     t_border = *Text_border(t);
     t_padding = *Text_padding(t);
+    //
+    edges_config = *TextConfig_Create(
+        .scale_width = 1 / 1.5,
+        .scale_height = 1 / 1.5,
+        .color = (SDL_Color){255, 255, 255, 255},
+    );
+    padding_t = Text_Create(cache);
+    border_t = Text_Create(cache);
+    margin_t = Text_Create(cache);
+    Text_UpdateConfig(padding_t, &edges_config);
+    Text_UpdateConfig(border_t, &edges_config);
+    Text_UpdateConfig(margin_t, &edges_config);
+    Text_SetUTF8(padding_t, "Padding");
+    Text_SetUTF8(border_t, "Border");
+    Text_SetUTF8(margin_t, "Margin");
+    Text_MeasureUTF8(padding_t, &paddingT_width, &paddingT_height);
+    Text_MeasureUTF8(border_t, &borderT_width, &borderT_height);
+    Text_MeasureUTF8(margin_t, &marginT_width, &marginT_height);
+    //
+    fps_t = Text_Create(cache);
+    Text_UpdateConfig(fps_t, TextConfig_Create(
+        .scale_width = 1 / 2.0,
+        .scale_height = 1 / 2.0,
+        .wrap = 0,
+        .color = (SDL_Color){0, 0, 0, 255},
+        .y = 0,
+        .x = 734
+        ));
     //
     time = spacing_time = fps_time = SDL_GetTicks();
     
@@ -72,7 +202,10 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     t_margin.color = (SDL_Color){255, 0, 0, 255};
     t_border.color = (SDL_Color){0, 255, 0, 255};
     t_padding.color = (SDL_Color){0, 0, 255, 255};
-    bitmask = (MARGIN_TOP | MARGIN_RIGHT | MARGIN_BOTTOM | MARGIN_LEFT | BORDER_TOP | BORDER_RIGHT | BORDER_BOTTOM | BORDER_LEFT);
+    bitmask = (
+        MARGIN_TOP | MARGIN_RIGHT | MARGIN_BOTTOM | MARGIN_LEFT
+        | BORDER_TOP | BORDER_RIGHT | BORDER_BOTTOM | BORDER_LEFT
+    );
 
     while(1){
         SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
@@ -140,44 +273,54 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
         // */
 
         // Draw fps
+        //*
         Text_DrawUTF8(
-            t,
+            fps_t,
             fps_str,
-            TextConfig_Create(
-                .scale_width = 1 / 2.0,
-                .scale_height = 1 / 2.0,
-                .wrap = 0,
-                .color = (SDL_Color){255, 255, 255, 255},
-                .y = 0,
-                .x = 734,
-
-                .margin = (Margin){},
-                .border = (Border){},
-                .padding = (Padding){},
-            ),
+            NULL,
             NULL
         );
+        // */
 
         //* Draw text
         Text_DrawUTF8(
             t,
             str,
             TextConfig_Create(
-                .scale_width = 1 / 2.0,
-                .scale_height = 1 / 2.0,
-                .wrap = 434,
-                .color = (SDL_Color){255, 255, 0, 255},
-                .x = 0,
-                .y = 0,
-
                 .padding = t_padding,
                 .border = t_border,
                 .margin = t_margin
             ),
-            NULL
+            &t_edges
         );
         // */
 
+        // Draw edges
+        //*
+        draw_edges(
+            padding_t, paddingT_width, paddingT_height,
+            &t_padding,
+            t_edges[DRAW_EDGE_PADDING_XMAX], t_edges[DRAW_EDGE_PADDING_XMIN],
+            t_edges[DRAW_EDGE_PADDING_YMAX], t_edges[DRAW_EDGE_PADDING_YMIN],
+            PADDING_TOP, PADDING_RIGHT, PADDING_BOTTOM, PADDING_LEFT
+        );
+        draw_edges(
+            border_t, borderT_width, borderT_height,
+            &t_border,
+            t_edges[DRAW_EDGE_BORDER_XMAX], t_edges[DRAW_EDGE_BORDER_XMIN],
+            t_edges[DRAW_EDGE_BORDER_YMAX], t_edges[DRAW_EDGE_BORDER_YMIN],
+            BORDER_TOP, BORDER_RIGHT, BORDER_BOTTOM, BORDER_LEFT
+        );
+        draw_edges(
+            margin_t, marginT_width, marginT_height,
+            &t_margin,
+            t_edges[DRAW_EDGE_MARGIN_XMAX], t_edges[DRAW_EDGE_MARGIN_XMIN],
+            t_edges[DRAW_EDGE_MARGIN_YMAX], t_edges[DRAW_EDGE_MARGIN_YMIN],
+            MARGIN_TOP, MARGIN_RIGHT, MARGIN_BOTTOM, MARGIN_LEFT
+        );
+        // */
+
+        // Check events
         while(SDL_PollEvent(&e)){
             switch(e.type){
                 case SDL_QUIT:
@@ -186,6 +329,10 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
                     SDL_Quit();
                     //
                     Text_Destroy(&t);
+                    Text_Destroy(&fps_t);
+                    Text_Destroy(&padding_t);
+                    Text_Destroy(&border_t);
+                    Text_Destroy(&margin_t);
                     TextCache_Destroy(&cache);
                     //
                     exit(0);

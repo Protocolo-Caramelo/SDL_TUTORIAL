@@ -15,6 +15,11 @@ int TextConfig_Equals(TextConfig*a, TextConfig*b)
         && a->color.g == b->color.g
         && a->color.b == b->color.b
         //
+        && a->color_bg.a == b->color_bg.a
+        && a->color_bg.r == b->color_bg.r
+        && a->color_bg.g == b->color_bg.g
+        && a->color_bg.b == b->color_bg.b
+        //
         && a->lineskip == b->lineskip
         && a->wrap == b->wrap
         // && a->rotation == b->rotation
@@ -55,6 +60,9 @@ void TextConfig_Populate(TextConfig*a, TextConfig*b)
 
     if(a->color.r == 0 && a->color.g == 0 && a->color.b == 0 && a->color.a == 0){
         a->color = b->color;
+    }
+    if(a->color_bg.r == 0 && a->color_bg.g == 0 && a->color_bg.b == 0 && a->color_bg.a == 0){
+        a->color_bg = b->color_bg;
     }
     DEFAULT_VALUE(a->lineskip, b->lineskip, INVALID_VAL);
     DEFAULT_VALUE(a->wrap, b->wrap, INVALID_VAL);

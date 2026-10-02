@@ -40,6 +40,7 @@ void Text_Test1(char*path, unsigned ptsize, char*str)
 
     cache = TextCache_Create(r, path, ptsize);
     t = Text_Create(cache);
+    *Text_color(t) = (SDL_Color){0, 0, 255, 255};
     Text_SetUTF8(t, str);
 
     *Text_wrap(t) = 1024;
@@ -92,7 +93,6 @@ void Text_Test1(char*path, unsigned ptsize, char*str)
             t,
             str,
             TextConfig_Create(
-                .color=(SDL_Color){0, 0, 255, 255},
                 .rotation = rotation,
                 .chr_rotation = chrRotation,
                 .chr_fmt = chrFmt,
