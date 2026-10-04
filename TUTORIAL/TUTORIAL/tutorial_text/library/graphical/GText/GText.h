@@ -27,6 +27,11 @@ struct Text {
 
     char *raw;
     TextConfig config;
+    TextCharRect *chrs_dest;
+    int edges[20];
+
+    int raw_changed;
+    int config_changed;
 };
 WRAP_FIELD(Text, cache->texture.renderer, renderer, SDL_Renderer*);
 WRAP_FIELD(Text, cache, TextCache*);
@@ -81,9 +86,15 @@ WRAP_FIELD(Text, config.chr_flip, chrFlip, SDL_RendererFlip);
 WRAP_FIELD(Text, config.x, x, double);
 WRAP_FIELD(Text, config.y, y, double);
 //
+WRAP_FIELD(Text, chrs_dest, chrsDest, TextCharRect*);
+//
 WRAP_FIELD(Text, cache_text, textCache, SDL_Texture*);
 WRAP_FIELD(Text, cache_texture, cacheTexture, SDL_Texture*);
 
+static inline int (*Text_edges(Text*t))[20]
+{
+    return &t->edges;
+}
 
 static inline void (**Text_fAlterText(Text*t))(Text*, TextChar*)
 {

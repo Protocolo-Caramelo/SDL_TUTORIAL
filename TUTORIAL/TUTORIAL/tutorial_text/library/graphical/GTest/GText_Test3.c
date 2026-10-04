@@ -49,7 +49,8 @@ void draw_edges(
     }
     if(bitmask & addr_right){
         edgeT_bh = ts->right + 1;
-        edgeT_x = xmax - t_width / 2 - MIN(edgeT_bh, t_height) / 2;
+        // edgeT_x = xmax - t_width / 2 - MIN(edgeT_bh, t_height) / 2;
+        edgeT_x = xmax - t_width / 2 - edgeT_bh / 2;
         edgeT_y = ymin / 2 + ymax / 2;
         edgeT_r = 90;
         //
@@ -68,7 +69,8 @@ void draw_edges(
     if(bitmask & addr_bottom){
         edgeT_bh = ts->bottom + 1;
         edgeT_x = xmin / 2 + xmax / 2 - t_width / 2;
-        edgeT_y = ymax - MIN(edgeT_bh, t_height);
+        // edgeT_y = ymax - MIN(edgeT_bh, t_height);
+        edgeT_y = ymax - edgeT_bh;
         edgeT_r = 180;
         //
         Text_DrawUTF8(
@@ -85,7 +87,8 @@ void draw_edges(
     }
     if(bitmask & addr_left){
         edgeT_bh = ts->left + 1;
-        edgeT_x = xmin - t_width / 2 + MIN(t_height, edgeT_bh) / 2;
+        // edgeT_x = xmin - t_width / 2 + MIN(t_height, edgeT_bh) / 2;
+        edgeT_x = xmin - t_width / 2 + edgeT_bh / 2;
         edgeT_y = ymin / 2 + ymax / 2;
         edgeT_r = 270;
         //
@@ -104,6 +107,90 @@ void draw_edges(
     // */
 }
 
+//
+double angle_init = 0;
+const double angle_rate = 5;
+const double angle_ampl = 10;
+SDL_Color color_init = (SDL_Color){.a = 255};
+SDL_Color color_curr;
+//
+enum COLORS{
+    RED,
+    GREEN,
+    BLUE,
+    ALPHA
+};
+int8_t color_rate[4] = {10, 5, 0, 4};
+int8_t color_rateCurr[4];
+
+void alterText_1(Text*t, TextChar*tc)
+{
+    if(tc->chr_textIdx == 0){
+        angle_init = fmod(angle_init + angle_rate, 360);
+        //
+        color_init.r = (Text_color(t)->r + color_init.r + color_rate[RED]);
+        color_init.g = (Text_color(t)->g + color_init.g + color_rate[GREEN]);
+        color_init.b = (Text_color(t)->b + color_init.b + color_rate[BLUE]);
+        color_init.a = (Text_color(t)->a + color_init.a + color_rate[ALPHA]);
+        //
+        if(color_init.r + color_rate[RED] >= 255 || color_init.r + color_rate[RED] <= 0){
+            color_rate[RED] *= -1;
+        }
+        if(color_init.g + color_rate[GREEN] >= 255 || color_init.g + color_rate[GREEN] <= 0){
+            color_rate[GREEN] *= -1;
+        }
+        if(color_init.b + color_rate[BLUE] >= 255 || color_init.b + color_rate[BLUE] <= 0){
+            color_rate[BLUE] *= -1;
+        }
+        if(color_init.a + color_rate[ALPHA] >= 255 || color_init.a + color_rate[ALPHA] <= 0){
+            color_rate[ALPHA] *= -1;
+        }
+    }
+
+    if(tc->chr_lineIdx == 0){
+        color_curr = color_init;
+        memcpy(color_rateCurr, color_rate, sizeof(color_rate) / sizeof(color_rate[0]));
+    }
+
+    if(color_curr.r + color_rateCurr[RED] >= 255 || color_curr.r + color_rateCurr[RED] <= 0){
+        color_rateCurr[RED] *= -1;
+    }
+    if(color_curr.g + color_rateCurr[GREEN] >= 255 || color_curr.g + color_rateCurr[GREEN] <= 0){
+        color_rateCurr[GREEN] *= -1;
+    }
+    if(color_curr.b + color_rateCurr[BLUE] >= 255 || color_curr.b + color_rateCurr[BLUE] <= 0){
+        color_rateCurr[BLUE] *= -1;
+    }
+    if(color_curr.a + color_rateCurr[ALPHA] >= 255 || color_curr.a + color_rateCurr[ALPHA] <= 0){
+        color_rateCurr[ALPHA] *= -1;
+    }
+
+    color_curr.r += color_rateCurr[RED];
+    color_curr.g += color_rateCurr[GREEN];
+    color_curr.b += color_rateCurr[BLUE];
+    color_curr.a += color_rateCurr[ALPHA];
+    //
+    tc->y += angle_ampl * sin(DEG_TO_RAD(angle_init + angle_rate * tc->chr_lineIdx));
+    //
+    tc->color.r = color_curr.r;
+    tc->color.g = color_curr.g;
+    tc->color.b = color_curr.b;
+    tc->color.a = color_curr.a;
+
+    // printf("%lf %lf\n", tc->y, 40.0 * sin(DEG_TO_RAD(angle_init + angle_rate * tc->chr_lineIdx)));
+    /*
+    printf(
+        "(%i %i %i %i)\n",
+        tc->color.r,
+        tc->color.g,
+        tc->color.b,
+        tc->color.a
+    );
+    // */
+}
+
+//
+//*
 void Text_Test3(char*fpath, unsigned ptsize, char*str)
 {
     SDL_Window *w;
@@ -128,7 +215,6 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     unsigned spacing_deltaTime;
     const unsigned spacing_valMax = 50;
     const unsigned spacing_timeDelay = 16;
-    char spacing_str[100] = "";
     //
     Text *fps_t;
     double fps;
@@ -203,8 +289,10 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     t_border.color = (SDL_Color){0, 255, 0, 255};
     t_padding.color = (SDL_Color){0, 0, 255, 255};
     bitmask = (
-        MARGIN_TOP | MARGIN_RIGHT | MARGIN_BOTTOM | MARGIN_LEFT
+        0
+        | MARGIN_TOP | MARGIN_RIGHT | MARGIN_BOTTOM | MARGIN_LEFT
         | BORDER_TOP | BORDER_RIGHT | BORDER_BOTTOM | BORDER_LEFT
+        | PADDING_TOP | PADDING_RIGHT | PADDING_BOTTOM | PADDING_LEFT
     );
 
     while(1){
@@ -217,15 +305,6 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
 
         // fps
         if(fps_deltaTime >= fps_timeDelay){
-            /*
-            printf(
-                "(%i %i %i %i)\n", 
-                t_padding.bottom,
-                t_padding.top,
-                t_padding.right,
-                t_padding.left
-            );
-            // */
             sprintf(fps_str, "FPS: %.2lf", fps);
         }
 
@@ -270,7 +349,7 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
         if(bitmask & MARGIN_LEFT && spacing_deltaTime >= spacing_timeDelay){
             ++t_margin.left;
         }
-        // */
+        // /
 
         // Draw fps
         //*
@@ -289,14 +368,15 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
             TextConfig_Create(
                 .padding = t_padding,
                 .border = t_border,
-                .margin = t_margin
+                .margin = t_margin,
+
+                .func_alterText = &alterText_1
             ),
             &t_edges
         );
         // */
 
-        // Draw edges
-        //*
+        //* Draw edges
         draw_edges(
             padding_t, paddingT_width, paddingT_height,
             &t_padding,
@@ -394,5 +474,51 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
         }
     }
 }
+// */
+
+/*
+void Text_Test3(char*fpath, unsigned ptsize, char*str)
+{
+    SDL_Window *w;
+    SDL_Renderer *r;
+    SDL_Event e;
+
+    w = SDL_CreateWindow(
+        "3nd test of Text struct",
+        SDL_WINDOWPOS_UNDEFINED,
+        SDL_WINDOWPOS_UNDEFINED,
+        1024,
+        512,
+        SDL_WINDOW_RESIZABLE
+    );
+    r = SDL_CreateRenderer(
+        w,
+        -1,
+        SDL_RENDERER_ACCELERATED
+    );
+
+    while(1){
+        SDL_SetRenderDrawColor(r, 255, 255, 255, 0);
+        SDL_RenderClear(r);
+
+        while(SDL_PollEvent(&e)){
+            switch(e.type){
+                case SDL_QUIT:
+                    SDL_DestroyWindow(w);
+                    SDL_DestroyRenderer(r);
+                    SDL_Quit();
+                    exit(0);
+                    break;
+
+                default:
+                    break;
+            }
+        }
+
+        SDL_RenderPresent(r);
+        SDL_Delay(16);
+    }
+}
+// */
 
 #endif

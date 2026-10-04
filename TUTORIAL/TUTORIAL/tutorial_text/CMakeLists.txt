@@ -18,7 +18,14 @@ if(${compilation_mode} MATCHES "NORMAL")
     set(compile_options -Wall -Wextra -D COMPILATION_NORMAL)
     set(compile_features c_std_99)
 elseif(${compilation_mode} MATCHES "DEVQUOTE")
-    set(compile_options -Wall -Wextra -D COMPILATION_DEVQUOTE)
+    set(compile_options
+        -Wall
+        -Wextra
+        # -fsanitize=address,undefined -fno-omit-frame-pointer
+        -g -O0
+        # -O4
+        -D COMPILATION_DEVQUOTE
+    )
     set(compile_features c_std_99)
 endif()
 

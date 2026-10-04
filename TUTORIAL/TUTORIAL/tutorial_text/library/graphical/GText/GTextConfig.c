@@ -43,6 +43,36 @@ int TextConfig_Equals(TextConfig*a, TextConfig*b)
         ;
 }
 
+int TextConfig_TextuallyEquals(TextConfig*a, TextConfig*b){
+    return 
+        a->color.a == b->color.a
+        && a->color.r == b->color.r
+        && a->color.g == b->color.g
+        && a->color.b == b->color.b
+        //
+        && a->color_bg.a == b->color_bg.a
+        && a->color_bg.r == b->color_bg.r
+        && a->color_bg.g == b->color_bg.g
+        && a->color_bg.b == b->color_bg.b
+        //
+        && a->lineskip == b->lineskip
+        && a->wrap == b->wrap
+        // && a->rotation == b->rotation
+        //
+        && a->scale_width == b->scale_width
+        && a->scale_height == b->scale_height
+        //
+        && a->bx_width == b->bx_width
+        && a->bx_height == b->bx_height
+        //
+        && a->chr_dist == b->chr_dist
+        && a->chr_fmt == b->chr_fmt
+        && a->chr_rotation == b->chr_rotation
+        && a->chr_flip == b->chr_flip
+        ;
+}
+
+
 void TextConfig_Populate(TextConfig*a, TextConfig*b)
 {
     /*

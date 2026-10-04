@@ -29,6 +29,12 @@ target_compile_options(
     PRIVATE
         ${compile_options}
     )
+# target_link_options(
+#     ${CMAKE_PROJECT_NAME}
+#     PRIVATE
+#         -fsanitize=address,undefined
+#         -fno-omit-frame-pointer
+#     )
 target_compile_features(
     ${CMAKE_PROJECT_NAME}
     PRIVATE

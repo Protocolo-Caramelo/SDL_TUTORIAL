@@ -95,6 +95,8 @@ struct TextConfig {
 }
 
 int TextConfig_Equals(TextConfig*, TextConfig*);
+int TextConfig_TextuallyEquals(TextConfig*, TextConfig*);
+
 void TextConfig_Populate(TextConfig*, TextConfig*);
 void TextConfig_PopulateInv(TextConfig*, TextConfig*);
 
