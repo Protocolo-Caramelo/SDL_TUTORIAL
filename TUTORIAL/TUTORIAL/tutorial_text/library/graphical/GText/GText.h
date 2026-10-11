@@ -13,6 +13,46 @@
 #include<utf8.h>
 
 typedef enum DRAW_EDGES DRAW_EDGES;
+#define DRAW_EDGE_AMT 30
+enum DRAW_EDGES {
+    DRAW_EDGE_XMAX,
+    DRAW_EDGE_XMIN,
+    DRAW_EDGE_YMAX,
+    DRAW_EDGE_YMIN,
+
+    DRAW_EDGE_MARGIN_XMAX,
+    DRAW_EDGE_MARGIN_XMIN,
+    DRAW_EDGE_MARGIN_YMAX,
+    DRAW_EDGE_MARGIN_YMIN,
+
+    DRAW_EDGE_BORDER_XMAX,
+    DRAW_EDGE_BORDER_XMIN,
+    DRAW_EDGE_BORDER_YMAX,
+    DRAW_EDGE_BORDER_YMIN,
+
+    DRAW_EDGE_PADDING_XMAX,
+    DRAW_EDGE_PADDING_XMIN,
+    DRAW_EDGE_PADDING_YMAX,
+    DRAW_EDGE_PADDING_YMIN,
+
+    DRAW_EDGE_TEXT_XMAX,
+    DRAW_EDGE_TEXT_XMIN,
+    DRAW_EDGE_TEXT_YMAX,
+    DRAW_EDGE_TEXT_YMIN,
+
+    DRAW_WIDTH,
+    DRAW_MARGIN_WIDTH,
+    DRAW_BORDER_WIDTH,
+    DRAW_PADDING_WIDTH,
+    DRAW_TEXT_WIDTH,
+
+    DRAW_HEIGHT,
+    DRAW_MARGIN_HEIGHT,
+    DRAW_BORDER_HEIGHT,
+    DRAW_PADDING_HEIGHT,
+    DRAW_TEXT_HEIGHT,
+
+};
 
 /*
  * Text struct
@@ -28,7 +68,7 @@ struct Text {
     char *raw;
     TextConfig config;
     TextCharRect *chrs_dest;
-    int edges[20];
+    int edges[DRAW_EDGE_AMT];
 
     int raw_changed;
     int config_changed;
@@ -91,7 +131,7 @@ WRAP_FIELD(Text, chrs_dest, chrsDest, TextCharRect*);
 WRAP_FIELD(Text, cache_text, textCache, SDL_Texture*);
 WRAP_FIELD(Text, cache_texture, cacheTexture, SDL_Texture*);
 
-static inline int (*Text_edges(Text*t))[20]
+static inline int (*Text_edges(Text*t))[DRAW_EDGE_AMT]
 {
     return &t->edges;
 }
@@ -156,35 +196,25 @@ SDL_Texture* Text_GenTextureUTF8(Text*);
 //
 // Methods
 //
-Text* Text_Create(TextCache*);
+Text* Text_Create_Core(TextCache*, TextConfig*, char*str); 
+#define TEXT_CREATE_VA_NUM_ARGS_IMPL(_0, _1, _2, _3, N, ...) N
+#define TEXT_CREATE_VA_NUM_ARGS(...) TEXT_CREATE_VA_NUM_ARGS_IMPL(__VA_ARGS__,, 3, 2, 1, 0)
+//
+#define TEXT_CREATE_0 \
+    #error "Text_Create function must have, at least, one arg."
+#define TEXT_CREATE_1(arg1) \
+    Text_Create_Core(arg1, NULL, NULL)
+#define TEXT_CREATE_2(arg1, arg2) \
+    Text_Create_Core(arg1, arg2, NULL)
+#define TEXT_CREATE_3(arg1, arg2, arg3) \
+    Text_Create_Core(arg1, arg2, arg3)
+//
+#define TEXT_CREATE_CAT(a, b) a##b
+#define TEXT_CREATE_SELECT(N) TEXT_CREATE_CAT(TEXT_CREATE_, N)
+#define Text_Create(...) \
+    TEXT_CREATE_SELECT(TEXT_CREATE_VA_NUM_ARGS(__VA_ARGS__))(__VA_ARGS__)
 
-enum DRAW_EDGES {
-    DRAW_EDGE_XMAX,
-    DRAW_EDGE_XMIN,
-    DRAW_EDGE_YMAX,
-    DRAW_EDGE_YMIN,
-
-    DRAW_EDGE_MARGIN_XMAX,
-    DRAW_EDGE_MARGIN_XMIN,
-    DRAW_EDGE_MARGIN_YMAX,
-    DRAW_EDGE_MARGIN_YMIN,
-
-    DRAW_EDGE_BORDER_XMAX,
-    DRAW_EDGE_BORDER_XMIN,
-    DRAW_EDGE_BORDER_YMAX,
-    DRAW_EDGE_BORDER_YMIN,
-
-    DRAW_EDGE_PADDING_XMAX,
-    DRAW_EDGE_PADDING_XMIN,
-    DRAW_EDGE_PADDING_YMAX,
-    DRAW_EDGE_PADDING_YMIN,
-
-    DRAW_EDGE_TEXT_XMAX,
-    DRAW_EDGE_TEXT_XMIN,
-    DRAW_EDGE_TEXT_YMAX,
-    DRAW_EDGE_TEXT_YMIN,
-};
-void Text_DrawUTF8(Text*, char*str, TextConfig*tc, int (*edges)[20]);
+void Text_DrawUTF8(Text*, char*str, TextConfig*tc, int (*edges)[DRAW_EDGE_AMT]);
 
 void Text_Destroy(Text**);
 

@@ -1,7 +1,17 @@
-add_executable(${CMAKE_PROJECT_NAME})
+if(${compilation_mode} STREQUAL "NORMAL")
+    set(MAIN_NAME __${CMAKE_PROJECT_NAME}__)
+elseif(${compilation_mode} STREQUAL "DEVQUOTE")
+    set(MAIN_NAME __${CMAKE_PROJECT_NAME}_devquote__)
+elseif(${compilation_mode} STREQUAL "TOOLCHAIN_WINDOWS")
+    set(MAIN_NAME __${CMAKE_PROJECT_NAME}_windows__)
+elseif(${compilation_mode} STREQUAL "TOOLCHAIN_WINDOWS_DEVQUOTE")
+    set(MAIN_NAME __${CMAKE_PROJECT_NAME}_windows_devquote__)
+endif()
+
+add_executable(${MAIN_NAME})
 
 target_sources(
-    ${CMAKE_PROJECT_NAME}
+    ${MAIN_NAME}
     PRIVATE
         main.c
         app/app.c
@@ -11,32 +21,33 @@ target_sources(
         app/infos.c
     )
 target_include_directories(
-    ${CMAKE_PROJECT_NAME}
+    ${MAIN_NAME}
     PRIVATE
-        app/header
+        ${main_include_directories}
+    )
+target_link_directories(
+    ${MAIN_NAME}
+    PRIVATE
+        ${main_link_directories}
     )
 target_link_libraries(
-    ${CMAKE_PROJECT_NAME}
+    ${MAIN_NAME}
     PRIVATE
-        graphical
-        m
-        SDL2
-        SDL2_image
+        ${main_link_libraries}
     )
 
 target_compile_options(
-    ${CMAKE_PROJECT_NAME}
+    ${MAIN_NAME}
     PRIVATE
         ${compile_options}
     )
-# target_link_options(
-#     ${CMAKE_PROJECT_NAME}
-#     PRIVATE
-#         -fsanitize=address,undefined
-#         -fno-omit-frame-pointer
-#     )
+target_link_options(
+    ${MAIN_NAME}
+    PRIVATE
+        ${main_link_options}
+    )
 target_compile_features(
-    ${CMAKE_PROJECT_NAME}
+    ${MAIN_NAME}
     PRIVATE
         ${compile_features}
     )

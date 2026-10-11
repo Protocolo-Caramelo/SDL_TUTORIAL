@@ -49,7 +49,7 @@ struct TextConfig {
 // 
 // Methods
 //
-#define TextConfig_Create(...) &(TextConfig){ \
+#define TextConfig_Create(...) (&(TextConfig){ \
     .padding.left = TEXTSPACING_UNINITIALIZED_VAL, \
     .padding.right = TEXTSPACING_UNINITIALIZED_VAL, \
     .padding.top = TEXTSPACING_UNINITIALIZED_VAL, \
@@ -92,7 +92,7 @@ struct TextConfig {
     .func_alterText = INVALID_PTR, \
     \
     ##__VA_ARGS__ \
-}
+})
 
 int TextConfig_Equals(TextConfig*, TextConfig*);
 int TextConfig_TextuallyEquals(TextConfig*, TextConfig*);

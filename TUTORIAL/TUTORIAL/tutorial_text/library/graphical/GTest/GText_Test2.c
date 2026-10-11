@@ -1,4 +1,4 @@
-#ifdef COMPILATION_DEVQUOTE
+#if defined(COMPILATION_DEVQUOTE) || defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE)
 #include"GTest.h"
 
 //
@@ -109,7 +109,7 @@ void AlterFunc_TextDrawUTF8_4(Text*t, TextChar*c)
 void Text_Test2(char*fpath, unsigned ptsize, char*str)
 {
     Text *t;
-    int t_edges[20];
+    int t_edges[DRAW_EDGE_AMT];
     TextCache *cache;
     //
     double fps;

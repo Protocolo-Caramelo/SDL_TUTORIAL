@@ -2,6 +2,8 @@
 #define BALLS_H
 
 #include"ball/Ball.h"
+#include<stdbool.h>
+#include<stdio.h>
 
 extern Ball balls[];
 extern size_t balls_idx;

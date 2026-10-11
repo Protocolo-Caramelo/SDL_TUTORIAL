@@ -1,4 +1,4 @@
-#ifdef COMPILATION_DEVQUOTE
+#if defined(COMPILATION_DEVQUOTE) || defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE)
 #include"GTest.h"
 
 void Text_Test1(char*path, unsigned ptsize, char*str)

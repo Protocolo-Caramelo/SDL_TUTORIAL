@@ -4,16 +4,31 @@
     [
         {
             "name": "text",
-            "binaryDir": "${sourceDir}/build",
+            "binaryDir": "${sourceDir}/__build__",
             "cacheVariables": {
                 "compilation_mode": "NORMAL"
             }
         },
         {
             "name": "devquote",
-            "binaryDir": "${sourceDir}/devquote",
+            "binaryDir": "${sourceDir}/__build_devquote__",
             "cacheVariables": {
                 "compilation_mode": "DEVQUOTE"
+            }
+        },
+
+        {
+            "name": "windows",
+            "binaryDir": "${sourceDir}/__build_windows__",
+            "cacheVariables": {
+                "compilation_mode": "TOOLCHAIN_WINDOWS"
+            }
+        },
+        {
+            "name": "windows_devquote",
+            "binaryDir": "${sourceDir}/__build_windows_devquote__",
+            "cacheVariables": {
+                "compilation_mode": "TOOLCHAIN_WINDOWS_DEVQUOTE"
             }
         }
     ]

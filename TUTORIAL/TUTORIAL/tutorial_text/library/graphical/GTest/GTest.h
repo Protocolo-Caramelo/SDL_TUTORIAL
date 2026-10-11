@@ -1,5 +1,5 @@
-#ifdef COMPILATION_DEVQUOTE
-#ifndef GTEST_H
+#if !defined(GTEST_H) \
+    && (defined(COMPILATION_DEVQUOTE) || defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE))
 #define GTEST_H
 
 #include"GText/GTextCharFormat.h"
@@ -33,5 +33,4 @@ void Text_Test2(char*fpath, unsigned ptsize, char*);
 void Text_Test3(char*fpath, unsigned ptsize, char*);
 void Text_Test4(char*fpath, unsigned ptsize, char*);
 
-#endif
 #endif

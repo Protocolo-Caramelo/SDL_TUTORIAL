@@ -9,7 +9,7 @@ int Text_getUTF8(Text*t, size_t idx)
 {
     if(idx > Text_GetSizeUTF8(t)){
         GRAPHICAL_LOG_CRITICAL("Can't access index %li from Text struct, which have %li size", idx, Text_GetSizeUTF8(t));
-        return 0;
+        return '\0';
     }
 
     char *byte;
@@ -18,18 +18,18 @@ int Text_getUTF8(Text*t, size_t idx)
 
     byte = utf8codepoint(*Text_raw(t), &c);
     i = 0;
-    while((i++) < idx && (byte = utf8codepoint(byte, &c)));
+    while((i++) < idx && c != '\0' && (byte = utf8codepoint(byte, &c)));
     return c;
 }
 
 size_t Text_GetSizeUTF8(Text*t)
 {
-    return utf8len(*Text_raw(t));
+    return (*Text_raw(t))? utf8len(*Text_raw(t)): 0;
 }
 
 size_t Text_GetLenUTF8(Text*t)
 {
-    return utf8size(*Text_raw(t));
+    return (*Text_raw(t))? utf8size(*Text_raw(t)): 0;
 }
 
 
@@ -41,6 +41,7 @@ char* Text_GetUTF8(Text*t)
 void Text_SetUTF8(Text*t, char*str)
 {
     t->raw_changed = (*Text_raw(t) != NULL)? utf8cmp(*Text_raw(t), str): 1;
+    // printf("* %s %s %i\n", *Text_raw(t), str, t->raw_changed);
     if(*Text_raw(t)){
         free(*Text_raw(t));
     }
@@ -103,7 +104,7 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
 
     //
     i = 0;
-    while((c = Text_getUTF8(t, (i++))) != '\0'){
+    while(*Text_raw(t) && (c = Text_getUTF8(t, (i++))) != '\0'){
         // printf("Text_MeasureUTF8: %.2lf %.2lf\n", cIns.x, cIns.y);
         c_glyph = TextCache_GetGlyph(*Text_cache(t), c, *Text_chrFmt(t));
 
@@ -213,19 +214,23 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
 
     }
     cIns_yMax += lineskip;
-    if(*Text_boxWidthText(t) > 0 && cIns_xMax - cIns_xMin > *Text_boxWidthText(t)){
+    // if(*Text_boxWidthText(t) > 0 && cIns_xMax - cIns_xMin > *Text_boxWidthText(t)){
+    if(*Text_boxWidthText(t) > 0){
         cIns_xMax = *Text_boxWidthText(t);
         cIns_xMin = 0;
     }
-    if(*Text_boxWidthText(t) < 0 && cIns_xMax - cIns_xMin > -*Text_boxWidthText(t)){
+    // if(*Text_boxWidthText(t) < 0 && cIns_xMax - cIns_xMin > -*Text_boxWidthText(t)){
+    if(*Text_boxWidthText(t) < 0){
         cIns_xMax = 0;
         cIns_xMin = *Text_boxWidthText(t);
     }
-    if(*Text_boxHeightText(t) > 0 && cIns_yMax - cIns_yMin + lineskip> *Text_boxHeightText(t)){
+    // if(*Text_boxHeightText(t) > 0 && cIns_yMax - cIns_yMin + lineskip> *Text_boxHeightText(t)){
+    if(*Text_boxHeightText(t) > 0){
         cIns_yMax = *Text_boxHeightText(t);
         cIns_yMin = 0;
     }
-    if(*Text_boxHeightText(t) < 0 && cIns_yMax - cIns_yMin < -*Text_boxHeightText(t)){
+    // if(*Text_boxHeightText(t) < 0 && cIns_yMax - cIns_yMin < -*Text_boxHeightText(t)){
+    if(*Text_boxHeightText(t) < 0){
         cIns_yMax = 0;
         cIns_yMin = *Text_boxHeightText(t);
     }
@@ -252,6 +257,10 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
     (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN] = cIns_xMin + *Text_x(t) + draw_edge_xSpacing;
     (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] = cIns_yMax + *Text_y(t) + draw_edge_ySpacing;
     (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN] = cIns_yMin + *Text_y(t) + draw_edge_ySpacing;
+    //
+    (*Text_edges(t))[DRAW_TEXT_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN];
+    (*Text_edges(t))[DRAW_TEXT_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN];
+    //
 }
 
 void Text_MeasurePadding(Text*t, int*w, int*h)
@@ -259,7 +268,11 @@ void Text_MeasurePadding(Text*t, int*w, int*h)
     int t_width, t_height;
 
     t_width = t_height = 0;
-    if(*Text_chrsDest(t) == NULL || t->raw_changed || t->config_changed){
+    // if(*Text_chrsDest(t) == NULL || t->raw_changed || t->config_changed){
+    if(
+        t->raw_changed || t->config_changed
+        || Text_config(t)->func_alterText
+    ){
         // printf("1: %p\n", *Text_chrsDest(t));
         Text_MeasureUTF8(t, &t_width, &t_height);
         // printf("2: %p\n", *Text_chrsDest(t));
@@ -282,6 +295,9 @@ void Text_MeasurePadding(Text*t, int*w, int*h)
     (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN] = (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN] - *Text_paddingLeft(t);
     (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] = (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] + *Text_paddingBottom(t);
     (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN] = (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN] - *Text_paddingTop(t);
+    //
+    (*Text_edges(t))[DRAW_PADDING_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_PADDING_XMAX] - (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN];
+    (*Text_edges(t))[DRAW_PADDING_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] - (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN];
     // */
 }
 
@@ -299,6 +315,9 @@ void Text_MeasureBorder(Text*t, int*w, int*h)
     (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN] = (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN] - *Text_borderLeft(t);
     (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] = (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] + *Text_borderBottom(t);
     (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN] = (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN] - *Text_borderTop(t);
+    //
+    (*Text_edges(t))[DRAW_BORDER_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_BORDER_XMAX] - (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN];
+    (*Text_edges(t))[DRAW_BORDER_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] - (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN];
 }
 
 void Text_MeasureMargin(Text*t, int*w, int*h)
@@ -314,6 +333,10 @@ void Text_MeasureMargin(Text*t, int*w, int*h)
     (*Text_edges(t))[DRAW_EDGE_MARGIN_XMIN] = (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN] - *Text_marginLeft(t);
     (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX] = (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] + *Text_marginBottom(t);
     (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN] = (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN] - *Text_marginTop(t);
+    // printf("A: %i %i\n", (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX], (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN]);
+    //
+    (*Text_edges(t))[DRAW_MARGIN_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_MARGIN_XMAX] - (*Text_edges(t))[DRAW_EDGE_MARGIN_XMIN];
+    (*Text_edges(t))[DRAW_MARGIN_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX] - (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN];
 }
 
 
@@ -368,52 +391,58 @@ void Text_PositionUTF8(Text*t, int*x, int*y)
 //
 SDL_Texture* Text_GenTextureSpacing(Text*t, int w, int h, SDL_Color*c, void(*f_alterTexture)(Text*, Texture*))
 {
-    SDL_Texture *tex;
+    Texture tex;
     SDL_Texture *target_prev;
     //
 
-    tex = SDL_CreateTexture(
-        *Text_renderer(t),
+    *Texture_renderer(&tex) = *Text_renderer(t);
+    *Texture_raw(&tex) = SDL_CreateTexture(
+        *Texture_renderer(&tex),
         TEXT_TEXTURE_PIXELFORMAT,
         TEXT_TEXTURE_ACCESS,
         w,
         h
     );
-    if(!tex){
+    if(!*Texture_raw(&tex)){
         GRAPHICAL_LOG_ERROR("Error while creatinng texture for Margin in Text_GenTextureMargin function: %s\n", SDL_GetError());
         exit(1);
     }
+    Texture_Clear(&tex);
     //*
     SDL_SetTextureBlendMode(
-        tex,
+        *Texture_raw(&tex),
         SDL_BLENDMODE_BLEND
     );
+    // */
     //
-    target_prev = SDL_GetRenderTarget(*Text_renderer(t));
-    SDL_SetRenderTarget(*Text_renderer(t), tex);
+    target_prev = SDL_GetRenderTarget(*Texture_renderer(&tex));
+    SDL_SetRenderTarget(*Texture_renderer(&tex), *Texture_raw(&tex));
     SDL_SetRenderDrawColor(
-        *Text_renderer(t),
+        *Texture_renderer(&tex),
         c->r,
         c->g,
         c->b,
         c->a
     );
-    SDL_RenderClear(*Text_renderer(t));
+    SDL_RenderClear(*Texture_renderer(&tex));
     if(f_alterTexture){
-        // f_alterTexture(t, tex);
+        f_alterTexture(t, &tex);
     }
     //
-    SDL_SetRenderTarget(*Text_renderer(t), target_prev);
-    // */
+    SDL_SetRenderTarget(*Texture_renderer(&tex), target_prev);
 
-    return tex;
+    return *Texture_raw(&tex);
 }
 
 SDL_Texture* Text_GenTextureMargin(Text*t)
 {
     int m_w, m_h;
 
-    if(*Text_chrsDest(t) == NULL){
+    // if(*Text_chrsDest(t) == NULL){
+    if(
+        t->raw_changed || t->config_changed
+        // || Text_config(t)->func_alterText
+    ){
         Text_MeasureMargin(t, &m_w, &m_h);
     }
     else {
@@ -428,7 +457,11 @@ SDL_Texture* Text_GenTextureBorder(Text*t)
 {
     int b_w, b_h;
 
-    if(*Text_chrsDest(t) == NULL){
+    // if(*Text_chrsDest(t) == NULL){
+    if(
+        t->raw_changed || t->config_changed
+        // || Text_config(t)->func_alterText
+    ){
         Text_MeasureBorder(t, &b_w, &b_h);
     }
     else {
@@ -443,7 +476,11 @@ SDL_Texture* Text_GenTexturePadding(Text*t)
 {
     int p_w, p_h;
 
-    if(*Text_chrsDest(t) == NULL){
+    // if(*Text_chrsDest(t) == NULL){
+    if(
+        t->raw_changed || t->config_changed
+        // || Text_config(t)->func_alterText
+    ){
         Text_MeasurePadding(t, &p_w, &p_h);
     }
     else {
@@ -467,7 +504,11 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
     size_t i;
 
     //
-    if(*Text_chrsDest(t) == NULL){
+    // if(*Text_chrsDest(t) == NULL){
+    if(
+        t->raw_changed || t->config_changed
+        // || Text_config(t)->func_alterText
+    ){
         Text_MeasureUTF8(t, NULL, NULL);
     }
 
@@ -506,7 +547,7 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
 
     // printf("Text_GenTextureUTF8: %i %i\n", cIns_xInit, cIns_yInit);
     i = 0;
-    while(i < Text_GetSizeUTF8(t)){
+    while(*Text_raw(t) && i < Text_GetSizeUTF8(t)){
         c_rect = (*Text_chrsDest(t))[i++];
 
         if(c_rect.src == NULL){
@@ -572,8 +613,8 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
     );
     SDL_SetRenderTarget(*Texture_renderer(&tex), target_prev);
 
-    free(*Text_chrsDest(t));
-    *Text_chrsDest(t) = NULL;
+    // free(*Text_chrsDest(t));
+    // *Text_chrsDest(t) = NULL;
 
     return *Texture_raw(&tex);
 }
@@ -581,7 +622,7 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
 //
 // Methods
 //
-Text* Text_Create(TextCache*cache)
+Text* Text_Create_Core(TextCache*cache, TextConfig *tc, char *str)
 {
     Text *n_t;
 
@@ -597,7 +638,13 @@ Text* Text_Create(TextCache*cache)
     //
     // *Text_raw(n_t) = malloc(sizeof(**Text_raw(n_t)));
     // *Text_raw(n_t)[0] = '\0';
-    *Text_raw(n_t) = NULL;
+    if(str == NULL){
+        *Text_raw(n_t) = NULL;
+    }
+    else {
+        *Text_raw(n_t) = malloc(strlen(str) + 1);
+        memcpy(*Text_raw(n_t), str, strlen(str) + 1);
+    }
     //
     *Text_chrsDest(n_t) = NULL;
     memset(*Text_edges(n_t), 0, sizeof(*Text_edges(n_t)));
@@ -633,13 +680,18 @@ Text* Text_Create(TextCache*cache)
         .func_alterPadding = NULL,
         .func_alterText = NULL,
     };
+    if(tc != NULL){
+        Text_UpdateConfig(n_t, tc);
+    }
+    n_t->raw_changed = 
+        n_t->config_changed = 0;
+
     return n_t;
 }
 
-void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
+void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT])
 {
     //*
-
     if(!tc){
         tc = Text_config(t);
     }
@@ -660,6 +712,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
     SDL_Texture *target_prev;
     int tex_width, tex_height;
     //
+    int textRawLiterally_changed;
     int textRaw_changed;
     int textConfig_changed;
     int textConfig_textuallyChanged;
@@ -670,8 +723,12 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
     //* Check if it's necessary create a new texture for margin, padding, border and/or text
     draw_xInit = draw_yInit = 0;
     //
-    textRaw_changed = (*Text_raw(t) != NULL)? utf8cmp(*Text_raw(t), str): 1;
-    textConfig_changed = !TextConfig_Equals(tc, Text_config(t));
+    if(str && !*Text_textCache(t)){
+        t->raw_changed = 1;
+    }
+    textRawLiterally_changed = (*Text_raw(t) != NULL)? utf8cmp(*Text_raw(t), str): str != NULL;
+    textRaw_changed = (t->raw_changed)? t->raw_changed: textRawLiterally_changed;
+    textConfig_changed = !TextConfig_Equals(tc, Text_config(t)) + t->config_changed;
     textConfig_textuallyChanged = !TextConfig_TextuallyEquals(tc, Text_config(t));
     textMargin_changed = !TextSpacing_Equals(&tc->margin, Text_margin(t));
     textBorder_changed = !TextSpacing_Equals(&tc->border, Text_border(t));
@@ -680,6 +737,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
     // Check
     if(textConfig_changed){
         *Text_config(t) = *tc;
+        t->config_changed = textConfig_changed;
     }
     *Text_rotation(t) = tc->rotation;
     *Text_x(t) = tc->x;
@@ -702,11 +760,15 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
         || tc->func_alterBorder != NULL
         || tc->func_alterMargin != NULL
         ){
-        if(textRaw_changed){
+        if(textRawLiterally_changed){
             Text_SetUTF8(t, str);
         }
+        // printf("text %s %i %i\n", *Text_raw(t), textRaw_changed, textConfig_textuallyChanged);
         Text_MeasureMargin(t, &tex_width, &tex_height);
     }
+    t->raw_changed = 
+        t->config_changed = 0
+        ;
     // */
 
     //* Margin
@@ -716,6 +778,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
          || textRaw_changed
          || tc->func_alterMargin != NULL
          || tc->func_alterText != NULL
+         || *Text_marginCache(t) == NULL
         )
         &&
         (
@@ -741,6 +804,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
          || textRaw_changed
          || tc->func_alterBorder != NULL
          || tc->func_alterText != NULL
+         || *Text_paddingCache(t) == NULL
         )
         &&
         (
@@ -766,6 +830,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
          || textRaw_changed
          || tc->func_alterPadding != NULL
          || tc->func_alterText != NULL
+         || *Text_paddingCache(t) == NULL
         )
         &&
         (
@@ -798,7 +863,6 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
             SDL_DestroyTexture(*Text_textCache(t));
             *Text_textCache(t) = NULL;
         }
-        // printf("text %i %i\n", textRaw_changed, textConfig_textuallyChanged);
         *Text_textCache(t) = Text_GenTextureUTF8(t);
     }
     // */
@@ -810,6 +874,8 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
     (*Text_edges(t))[DRAW_EDGE_YMAX] = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX];
     (*Text_edges(t))[DRAW_EDGE_YMIN] = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN];
     // */
+    (*Text_edges(t))[DRAW_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_XMAX] - (*Text_edges(t))[DRAW_EDGE_XMIN];
+    (*Text_edges(t))[DRAW_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_YMAX] - (*Text_edges(t))[DRAW_EDGE_YMIN];
 
     //* Clean texture that have no size
     // margin
@@ -846,6 +912,12 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
       ){
         SDL_DestroyTexture(*Text_paddingCache(t));
         *Text_paddingCache(t) = NULL;
+    }
+
+    // Text
+    if(!*Text_raw(t)){
+        SDL_DestroyTexture(*Text_textCache(t));
+        *Text_textCache(t) = NULL;
     }
     // */
 
@@ -993,13 +1065,8 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[20])
     );
     // */
 
-    /*
-    if(*Text_chrsDest(t) != NULL){
-        free(*Text_chrsDest(t));
-        *Text_chrsDest(t) = NULL;
-    }
-    // */
     if(edges != NULL){
+        // printf("B: %i %i\n", (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX], (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN]);
         memcpy(*edges, *Text_edges(t), sizeof(*Text_edges(t)));
     }
 }

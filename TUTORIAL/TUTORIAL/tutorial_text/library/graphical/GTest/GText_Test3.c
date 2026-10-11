@@ -1,4 +1,4 @@
-#ifdef COMPILATION_DEVQUOTE
+#if defined(COMPILATION_DEVQUOTE) || defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE)
 #include"GTest.h"
 
 #define PADDING_TOP 0x1
@@ -202,7 +202,7 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
     Margin t_margin;
     Border t_border;
     Padding t_padding;
-    int t_edges[20];
+    int t_edges[DRAW_EDGE_AMT];
     //
     TextConfig edges_config;
     Text *padding_t, *border_t, *margin_t;
@@ -249,6 +249,8 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
         .wrap = 434,
         .x = 0,
         .y = 0,
+
+        .func_alterText = &alterText_1
     ));
     t_margin = *Text_margin(t);
     t_border = *Text_border(t);
@@ -369,12 +371,9 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
                 .padding = t_padding,
                 .border = t_border,
                 .margin = t_margin,
-
-                .func_alterText = &alterText_1
             ),
             &t_edges
         );
-        // */
 
         //* Draw edges
         draw_edges(

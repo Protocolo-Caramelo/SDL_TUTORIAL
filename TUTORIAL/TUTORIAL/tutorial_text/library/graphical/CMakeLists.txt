@@ -45,22 +45,18 @@ target_sources(
         GTest/GText_Test1.c
         GTest/GText_Test2.c
         GTest/GText_Test3.c
+        GTest/GText_Test4.c
     )
 target_link_libraries(
     graphical
     PUBLIC
-        SDL2
-        SDL2_image
-        SDL2_ttf
-        utf8
-        uthash
+        ${graphical_link_libraries}
     )
 
 target_include_directories(
     graphical
     PRIVATE
-        GText
-        GTest
+        ${graphical_include_directories}
     )
 
 target_compile_options(

@@ -2,6 +2,7 @@
 #define GUIDELINE_H
 
 #include"commons.h"
+#include<stdbool.h>
 
 typedef struct Guideline Guideline;
 typedef struct GuidelineVTable GuidelineVTable;

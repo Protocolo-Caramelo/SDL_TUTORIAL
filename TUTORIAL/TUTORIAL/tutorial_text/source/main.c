@@ -1,7 +1,7 @@
-#if defined(COMPILATION_NORMAL)
+#if !defined(COMPILATION_DEVQUOTE) && !defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE)
 #include"main.h"
 
-int main()
+int main(int argc, char*argv[])
 {
     SDL_Event e;
 
@@ -29,14 +29,14 @@ int main()
     return 0;
 }
 
-#elif defined(COMPILATION_DEVQUOTE)
+#elif defined(COMPILATION_DEVQUOTE) || defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE)
 // #include"main.h"
 #include<graphical.h>
 
 #define VA_NUM_ARGS_IMPL(_0, _1, _2, _3, N, ...) N
 #define VA_NUM_ARGS(...) VA_NUM_ARGS_IMPL(__VA_ARGS__,, 3, 2, 1, 0)
 
-int main()
+int main(int argc, char*argv[])
 {
     /*
      * Please, run one test per program...
@@ -83,6 +83,13 @@ int main()
         "./assets/fonts/Ubuntu/Ubuntu-Regular.ttf",
         50,
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit. In mollis faucibus porttitor. Mauris tempor ut lorem ac laoreet. Quisque facilisis aliquet mauris a blandit. Sed magna ante, faucibus sit amet purus ac, eleifend posuere nunc.\nDuis id elit vulputate, sollicitudin odio nec, volutpat massa. Praesent auctor tincidunt massa, vitae interdum felis euismod sed. Vivamus ultrices, odio ac ullamcorper tincidunt, est urna iaculis lorem, a venenatis nunc magna ac quam. Donec nunc turpis, bibendum a lobortis at, auctor vitae augue."
+    );
+    // */
+    /*
+    Text_Test4(
+        "./assets/fonts/Ubuntu/Ubuntu-Regular.ttf",
+        50,
+        "Click Here!"
     );
     // */
 
