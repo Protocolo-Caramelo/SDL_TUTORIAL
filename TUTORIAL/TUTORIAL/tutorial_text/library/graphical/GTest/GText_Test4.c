@@ -1,13 +1,18 @@
 #if defined(COMPILATION_DEVQUOTE) || defined(COMPILATION_TOOLCHAIN_WINDOWS_DEVQUOTE)
 #include"GTest.h"
 
+SDL_Window *w;
+SDL_Renderer *r;
+SDL_Event e;
+//
 typedef struct TextInput TextInput;
 struct TextInput {
     Text *text;
     int selected;
 
-    SDL_Texture *cursor;
+    SDL_Texture *cursor_tex;
     int cursor_x, cursor_y;
+    size_t cursor_idx;
 };
 char TI_str[1024];
 char *TI_byteUTF8;
@@ -39,9 +44,10 @@ void TextInput_checkSelection(TextInput*inp, SDL_Event*e)
     TextCharRect *chrs_dest;
 
     min_dist = INT_MAX;
+    min_distI = 0;
     chrs_dest = *Text_chrsDest(inp->text);
     for(i=0; i < Text_GetSizeUTF8(inp->text) && inp->selected; ++i){
-        distX = chrs_dest[i].x - x + chrs_dest[i].width * 2;
+        distX = chrs_dest[i].x - x + chrs_dest[i].width;
         distY = chrs_dest[i].y - y + chrs_dest[i].height;
         dist = sqrt(distX * distX + distY * distY);
         if(dist < min_dist){
@@ -50,10 +56,73 @@ void TextInput_checkSelection(TextInput*inp, SDL_Event*e)
         }
     }
 
-    if(Text_GetSizeUTF8(inp->text) && inp->selected){
-        // printf("%i %c\n", min_distI, *Text_raw(inp->text)[min_distI - 1]);
-        printf("%i\n", min_distI);
+    inp->cursor_idx = min_distI;
+}
+
+void TextInput_displayCursor(TextInput*inp)
+{
+    if(!inp->selected){
+        return;
     }
+    if(!*Text_raw(inp->text)){
+        inp->cursor_idx = 0;
+    }
+
+    TextCharRect *chrs_dest;
+    SDL_Rect dest;
+
+    chrs_dest = *Text_chrsDest(inp->text);
+    //
+    inp->cursor_x = *Text_marginLeft(inp->text) + *Text_borderLeft(inp->text) + *Text_paddingLeft(inp->text);
+    inp->cursor_y = *Text_marginTop(inp->text) + *Text_borderTop(inp->text) + *Text_paddingTop(inp->text);
+    if(*Text_raw(inp->text)){
+        inp->cursor_x = chrs_dest[inp->cursor_idx].x + chrs_dest[inp->cursor_idx].width - 1;
+        inp->cursor_y = chrs_dest[inp->cursor_idx].y;
+    }
+    // printf("%i (%i %i)\n", min_distI, inp->cursor_x, inp->cursor_y);
+
+    //*
+    if(!inp->cursor_tex){
+        inp->cursor_tex = SDL_CreateTexture(
+            r,
+            SDL_PIXELFORMAT_RGBA8888,
+            SDL_TEXTUREACCESS_TARGET,
+            2,
+            *Text_lineskip(inp->text) * *Text_scaleHeight(inp->text)
+        );
+        if(!inp->cursor_tex){
+            printf("Error while creating texture for cursor: %s\n", SDL_GetError());
+            exit(1);
+        }
+
+        SDL_SetRenderTarget(r, inp->cursor_tex);
+        SDL_SetRenderDrawColor(
+            r,
+            0,
+            0,
+            0,
+            255
+        );
+        SDL_RenderClear(r);
+        SDL_SetRenderTarget(r, NULL);
+    }
+
+    dest = (SDL_Rect){
+        .x = inp->cursor_x,
+        .y = inp->cursor_y
+    };
+    SDL_QueryTexture(
+        inp->cursor_tex,
+        NULL, NULL,
+        &dest.w, &dest.h
+    );
+    SDL_RenderCopy(
+        r,
+        inp->cursor_tex,
+        NULL,
+        &dest
+    );
+    // */
 }
 
 void TextInput_checkInput(TextInput*inp, SDL_Event*e)
@@ -77,20 +146,39 @@ void TextInput_checkInput(TextInput*inp, SDL_Event*e)
                 ++TI_charUTF8_idx;
             }
             Text_SetUTF8(inp->text, TI_str);
+            inp->cursor_idx--;
+        }
+        //
+        if(e->key.keysym.sym == SDLK_LEFT && Text_raw(inp->text) && inp->cursor_idx){
+            inp->cursor_idx--;
+        }
+        else if(e->key.keysym.sym == SDLK_RIGHT && Text_raw(inp->text) && inp->cursor_idx < Text_GetSizeUTF8(inp->text)){
+            inp->cursor_idx++;
         }
     }
 
     if(e->type == SDL_TEXTINPUT){
-        memset(TI_str, 0, sizeof(TI_str) / sizeof(TI_str[0]));
+        char *byte_raw;
+        char *byte_str;
+        int c;
+        size_t i;
 
-        if(*Text_raw(inp->text)){
-            utf8cpy(TI_str, *Text_raw(inp->text));
-        }
-        else {
-            TI_str[0] = '\0';
-        }
-        utf8cat(TI_str, e->text.text);
+        byte_raw = utf8codepoint(*Text_raw(inp->text), &c);
+        byte_str = TI_str;
+        i = 0;
+        *byte_str = '\0';
+        do{
+            //*
+            if(i == inp->cursor_idx){
+                utf8cat(byte_str, e->text.text);
+                byte_str += utf8size(e->text.text) - 1;
+            }
+            byte_str = utf8catcodepoint(byte_str, c, sizeof(TI_str) - (size_t)(byte_str - TI_str));
+            // */
+            ++i;
+        } while(c != '\0' && (byte_raw = utf8codepoint(byte_raw, &c)));
         Text_SetUTF8(inp->text, TI_str);
+        inp->cursor_idx++;
     }
 }
 
@@ -124,9 +212,9 @@ void alterMargin_1(Text*t, Texture*tex)
 //
 void Text_Test4(char*fpath, unsigned ptsize, char*str)
 {
-    SDL_Window *w;
-    SDL_Renderer *r;
-    SDL_Event e;
+    extern SDL_Window *w;
+    extern SDL_Renderer *r;
+    extern SDL_Event e;
     //
     int w_width, w_height;
     //
@@ -166,6 +254,10 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
     //
     cache = TextCache_Create(r, fpath, ptsize);
     t_marginTex = IMG_LoadTexture(r, "./library/graphical/GTest/GText_Test4_Asset1.jpeg");
+    if(t_marginTex == NULL){
+        printf("Errow while loading image ./library/graphical/GTest/GText_Test4_Asset1.jpeg: %s\n", SDL_GetError());
+        exit(1);
+    }
     //*
     t = Text_Create(
         cache,
@@ -223,7 +315,7 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             .color = (SDL_Color){.r=255, .g=255, .b=255, .a=255}
         },
         .bx_width = 200,
-        .bx_height = TTF_FontLineSkip(*TextCache_font(cache)) * 1 / 2.0,
+        .bx_height = TTF_FontLineSkip(*TextCache_font(cache)) / 2.0,
     );
     input_configSelected.margin = (TextSpacing){
         .top = 5,
@@ -232,9 +324,11 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         .left = 5,
         .color = (SDL_Color){.a=255}
     };
+    input_r = input_g = input_b = (TextInput){};
     input_r.text = Text_Create(cache, &input_configUnselected);
     input_g.text = Text_Create(cache, &input_configUnselected);
     input_b.text = Text_Create(cache, &input_configUnselected);
+    Text_SetUTF8(input_r.text, "");
 
     while(1){
         if(SDL_GetTicks() - fps_delayTime >= fps_delay){
@@ -327,6 +421,8 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             (input_r.selected)? &input_configSelected: &input_configUnselected,
             NULL
         );
+        TextInput_displayCursor(&input_r);
+        //*
         // */
 
         SDL_RenderPresent(r);

@@ -864,6 +864,12 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
             *Text_textCache(t) = NULL;
         }
         *Text_textCache(t) = Text_GenTextureUTF8(t);
+        //
+        size_t i;
+        for(i=0; i < Text_GetSizeUTF8(t); ++i){
+            (*Text_chrsDest(t))[i].x += *Text_marginLeft(t) + *Text_borderLeft(t) + *Text_paddingLeft(t);
+            (*Text_chrsDest(t))[i].y += *Text_marginTop(t) + *Text_borderTop(t) + *Text_paddingTop(t);
+        }
     }
     // */
 
