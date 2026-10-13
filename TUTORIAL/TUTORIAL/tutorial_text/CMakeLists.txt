@@ -1,23 +1,22 @@
 cmake_minimum_required(VERSION 4.2.3)
 project(text C)
 
-find_package(SDL2 REQUIRED)
-find_package(SDL2_image REQUIRED)
-find_package(SDL2_ttf REQUIRED)
-
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 if(NOT ${compilation_mode} MATCHES "TOOLCHAIN")
     set(CMAKE_C_COMPILER gcc)
 elseif(${compilation_mode} MATCHES "TOOLCHAIN_WINDOWS")
     set(CMAKE_SYSTEM_NAME Windows)
     set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
-    set(CMAKE_CXX_COMPILER x86_64-w64-minw32-g++)
+    set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
     set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
     set(CMAKE_FIND_ROOT_PATH_MODE_PACKAGE ONLY)
 endif()
+
+find_package(SDL2 REQUIRED)
+find_package(SDL2_image REQUIRED)
+find_package(SDL2_ttf REQUIRED)
 
 set(main_include_directories app/header)
 set(main_link_directories)
@@ -47,6 +46,16 @@ set(
     -lmingw32
     -lSDL2main
     -lSDL2
+    -static
+    #
+    -lsetupapi
+    -lwinmm
+    -limm32
+    -lole32
+    -loleaut32
+    -luuid
+    -lversion
+    -lrpcrt4
     -mwindows
 )
 #
@@ -60,7 +69,6 @@ endif()
 
 # 
 if(${compilation_mode} STREQUAL "NORMAL")
-    message("AAAA")
 elseif(${compilation_mode} STREQUAL "DEVQUOTE")
     set(compile_options
         -Wall

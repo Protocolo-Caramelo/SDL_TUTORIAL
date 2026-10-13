@@ -88,7 +88,7 @@ int main(int argc, char*argv[])
     //*
     Text_Test4(
         "./assets/fonts/Ubuntu/Ubuntu-Regular.ttf",
-        50,
+        90,
         "Click Here!"
     );
     // */

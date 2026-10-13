@@ -167,7 +167,10 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
 
         if(c == '\n' || (c == ' ' && cIns.x == 0)){
             (*Text_chrsDest(t))[i - 1] = (TextCharRect){
-                .src = NULL
+                .src = NULL,
+                .x = cIns.x,
+                .y = cIns.y,
+                .height = cIns.height
             };
 
             continue;
@@ -726,7 +729,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
     if(str && !*Text_textCache(t)){
         t->raw_changed = 1;
     }
-    textRawLiterally_changed = (*Text_raw(t) != NULL)? utf8cmp(*Text_raw(t), str): str != NULL;
+    textRawLiterally_changed = (*Text_raw(t) != NULL)? utf8cmp(*Text_raw(t), str): 1; // str != NULL;
     textRaw_changed = (t->raw_changed)? t->raw_changed: textRawLiterally_changed;
     textConfig_changed = !TextConfig_Equals(tc, Text_config(t)) + t->config_changed;
     textConfig_textuallyChanged = !TextConfig_TextuallyEquals(tc, Text_config(t));
@@ -749,6 +752,8 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
     // */
 
     //*
+    t->raw_changed = textRaw_changed;
+    t->config_changed = textConfig_changed;
     if(
         textRaw_changed
         || textConfig_changed
@@ -760,7 +765,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
         || tc->func_alterBorder != NULL
         || tc->func_alterMargin != NULL
         ){
-        if(textRawLiterally_changed){
+        if(textRawLiterally_changed && str){
             Text_SetUTF8(t, str);
         }
         // printf("text %s %i %i\n", *Text_raw(t), textRaw_changed, textConfig_textuallyChanged);
@@ -776,6 +781,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
         (
          textMargin_changed
          || textRaw_changed
+         || textConfig_textuallyChanged
          || tc->func_alterMargin != NULL
          || tc->func_alterText != NULL
          || *Text_marginCache(t) == NULL
@@ -802,6 +808,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
         (
          textBorder_changed
          || textRaw_changed
+         || textConfig_textuallyChanged
          || tc->func_alterBorder != NULL
          || tc->func_alterText != NULL
          || *Text_paddingCache(t) == NULL
@@ -828,6 +835,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
         (
          textPadding_changed
          || textRaw_changed
+         || textConfig_textuallyChanged
          || tc->func_alterPadding != NULL
          || tc->func_alterText != NULL
          || *Text_paddingCache(t) == NULL
@@ -857,7 +865,6 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
          || *Text_textCache(t) == NULL
          || tc->func_alterText != NULL
         )
-        && *Text_raw(t)
     ){
         if(*Text_textCache(t) != NULL){
             SDL_DestroyTexture(*Text_textCache(t));
