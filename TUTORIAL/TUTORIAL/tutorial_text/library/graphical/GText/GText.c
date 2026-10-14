@@ -641,10 +641,8 @@ Text* Text_Create_Core(TextCache*cache, TextConfig *tc, char *str)
     //
     // *Text_raw(n_t) = malloc(sizeof(**Text_raw(n_t)));
     // *Text_raw(n_t)[0] = '\0';
-    if(str == NULL){
-        *Text_raw(n_t) = NULL;
-    }
-    else {
+    *Text_raw(n_t) = NULL;
+    if(str){
         *Text_raw(n_t) = malloc(strlen(str) + 1);
         memcpy(*Text_raw(n_t), str, strlen(str) + 1);
     }
@@ -860,11 +858,16 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
     //* Text
     if(
         (
-         textRaw_changed
-         || textConfig_textuallyChanged
-         || *Text_textCache(t) == NULL
-         || tc->func_alterText != NULL
+            (
+             textRaw_changed
+             || textConfig_textuallyChanged
+             || *Text_textCache(t) == NULL
+             || tc->func_alterText != NULL
+            )
+            && *Text_raw(t)
         )
+        || *Text_boxHeightText(t)
+        || *Text_boxWidthText(t)
     ){
         if(*Text_textCache(t) != NULL){
             SDL_DestroyTexture(*Text_textCache(t));
@@ -872,11 +875,6 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
         }
         *Text_textCache(t) = Text_GenTextureUTF8(t);
         //
-        size_t i;
-        for(i=0; i < Text_GetSizeUTF8(t); ++i){
-            (*Text_chrsDest(t))[i].x += *Text_marginLeft(t) + *Text_borderLeft(t) + *Text_paddingLeft(t);
-            (*Text_chrsDest(t))[i].y += *Text_marginTop(t) + *Text_borderTop(t) + *Text_paddingTop(t);
-        }
     }
     // */
 
@@ -889,6 +887,19 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
     // */
     (*Text_edges(t))[DRAW_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_XMAX] - (*Text_edges(t))[DRAW_EDGE_XMIN];
     (*Text_edges(t))[DRAW_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_YMAX] - (*Text_edges(t))[DRAW_EDGE_YMIN];
+
+    // Update Text_chrsDest
+    size_t i;
+    for(
+        i=0; i < Text_GetSizeUTF8(t) && 
+        (
+        textRaw_changed || textConfig_changed
+        || Text_config(t)->func_alterText
+        ) ; ++i
+        ){
+        (*Text_chrsDest(t))[i].x += *Text_x(t) + *Text_marginLeft(t) + *Text_borderLeft(t) + *Text_paddingLeft(t);
+        (*Text_chrsDest(t))[i].y += *Text_y(t) + *Text_marginTop(t) + *Text_borderTop(t) + *Text_paddingTop(t);
+    }
 
     //* Clean texture that have no size
     // margin

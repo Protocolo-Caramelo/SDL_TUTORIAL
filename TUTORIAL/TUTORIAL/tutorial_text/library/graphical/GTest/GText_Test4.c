@@ -11,19 +11,104 @@ SDL_Event e;
 typedef struct TextInput TextInput;
 struct TextInput {
     Text *text;
+    TextConfig tc_selected;
+    TextConfig tc_unselected;
+
     int selected;
 
     SDL_Texture *cursor_tex;
     int cursor_x, cursor_y;
     size_t cursor_idx;
 };
-char TI_str[1024];
+#define TEXTINPUT_MAX_TEXT_RAW_BYTE_SIZE 1024
+char TI_str[TEXTINPUT_MAX_TEXT_RAW_BYTE_SIZE];
 //
-void TextInput_checkSelection(TextInput*inp, SDL_Event*e);
-void TextInput_displayCursor(TextInput*inp);
-void TextInput_handleKeyDown(TextInput*inp, SDL_Event*e);
-void TextInput_handleTextInput(TextInput*inp, SDL_Event*e, char*str);
+TextInput* TextInput_Create(SDL_Renderer*, TextCache*, TextConfig*, TextConfig*, char init_str[]);
+void TextInput_Destroy(TextInput**);
+void TextInput_Display(TextInput*, int x, int y);
 
+void TextInput_checkSelection(TextInput*, SDL_Event*e);
+void TextInput_displayCursor(TextInput*);
+void TextInput_handleKeyDown(TextInput*, SDL_Event*e);
+void TextInput_handleTextInput(TextInput*, SDL_Event*e, char*str);
+
+
+TextInput* TextInput_Create(SDL_Renderer *r, TextCache*cache, TextConfig*tc_unselected, TextConfig*tc_selected, char init_str[])
+{
+    TextInput *n_ti;
+
+    n_ti = malloc(sizeof(TextInput));
+    n_ti->text = Text_Create(cache, tc_unselected, init_str);
+    n_ti->tc_unselected = *tc_unselected;
+    n_ti->tc_selected = *tc_selected;
+    //
+    n_ti->selected =
+        n_ti->cursor_x =
+        n_ti->cursor_y =
+        n_ti->cursor_idx = 0
+        ;
+    //
+    n_ti->cursor_tex = SDL_CreateTexture(
+        r,
+        SDL_PIXELFORMAT_RGBA8888,
+        SDL_TEXTUREACCESS_TARGET,
+        2,
+        *Text_lineskip(n_ti->text) * *Text_scaleHeight(n_ti->text)
+    );
+    if(!n_ti->cursor_tex){
+        printf("Error while creating texture for cursor: %s\n", SDL_GetError());
+        exit(1);
+    }
+    SDL_SetRenderTarget(r, n_ti->cursor_tex);
+    SDL_SetRenderDrawColor(
+        r,
+        0,
+        0,
+        0,
+        255
+    );
+    SDL_RenderClear(r);
+    SDL_SetRenderTarget(r, NULL);
+
+    return n_ti;
+}
+
+void TextInput_Destroy(TextInput**inp)
+{
+    SDL_DestroyTexture((*inp)->cursor_tex);
+    Text_Destroy(&(*inp)->text);
+    free(*inp);
+    *inp = NULL;
+}
+
+void TextInput_Display(TextInput*ti, int x, int y)
+{
+    TextConfig *tc;
+    TextCharRect *chrs_dest;
+    size_t t_size;
+
+    *Text_x(ti->text) = ti->tc_selected.x = ti->tc_unselected.x = x;
+    *Text_y(ti->text) = ti->tc_selected.y = ti->tc_unselected.y = y;
+    tc = (ti->selected)? &ti->tc_selected: &ti->tc_unselected;
+    // printf("%i %i\n", *Text_x(ti->text), *Text_y(ti->text));
+    t_size = Text_GetSizeUTF8(ti->text);
+    Text_DrawUTF8(
+        ti->text,
+        NULL,
+        tc,
+        NULL
+    );
+    //
+    //
+    chrs_dest = *Text_chrsDest(ti->text);
+    ti->tc_selected.bx_height =
+    ti->tc_unselected.bx_height =
+        (chrs_dest && t_size)?  chrs_dest[t_size - 1].y + chrs_dest[t_size - 1].height - *Text_y(ti->text)
+        : *Text_lineskip(ti->text) * *Text_scaleHeight(ti->text);
+
+
+    TextInput_displayCursor(ti);
+}
 
 void TextInput_checkSelection(TextInput*inp, SDL_Event*e)
 {
@@ -45,24 +130,44 @@ void TextInput_checkSelection(TextInput*inp, SDL_Event*e)
         ;
 
     //
-    int dist, min_dist, min_distI;
-    int distX, distY;
+    size_t min_distI;
+    size_t min_distY_i, min_distX_i;
+    size_t t_size;
     TextCharRect *chrs_dest;
 
-    min_dist = INT_MAX;
-    min_distI = 0;
+    min_distY_i = min_distX_i = min_distI = 1;
+    t_size = Text_GetSizeUTF8(inp->text);
     chrs_dest = *Text_chrsDest(inp->text);
-    for(i=0; i < Text_GetSizeUTF8(inp->text) && inp->selected; ++i){
-        distX = chrs_dest[i].x - x + chrs_dest[i].width;
-        distY = chrs_dest[i].y - y + chrs_dest[i].height / 2;
-        dist = sqrt(distX * distX + distY * distY);
-        if(dist < min_dist){
-            min_dist = dist;
-            min_distI = i;
+    for(i=0; i < t_size && inp->selected && chrs_dest; ++i){
+        if(
+            (y >= chrs_dest[i].y && y <= chrs_dest[i].y + chrs_dest[i].height)
+            || (y < chrs_dest[i].y)
+         ){
+            break;
         }
+        ++min_distY_i;
     }
+    // printf("%li\n", min_distY_i);
 
-    inp->cursor_idx = min_distI + 1;
+    min_distX_i = min_distI = min_distY_i;
+    for(i=min_distY_i - 1; i < t_size && inp->selected && chrs_dest; ++i){
+        if(
+            (x >= chrs_dest[i].x && x <= chrs_dest[i].x + chrs_dest[i].width)
+            || x < chrs_dest[i].x
+            || chrs_dest[min_distY_i].y < chrs_dest[i].y
+        ){
+            break;
+        }
+        ++min_distX_i;
+    }
+    // printf("%li\n", min_distX_i);
+
+    min_distI = min_distX_i;
+    if(x <= chrs_dest[i].x + chrs_dest[i].width / 2 || x > chrs_dest[i].x + chrs_dest[i].width){
+        --min_distI;
+    }
+    // printf("%li\n\n", min_distI);
+    inp->cursor_idx = min_distI;
 }
 
 void TextInput_displayCursor(TextInput*inp)
@@ -81,12 +186,12 @@ void TextInput_displayCursor(TextInput*inp)
     //
     inp->cursor_x = *Text_x(inp->text) + *Text_marginLeft(inp->text) + *Text_borderLeft(inp->text) + *Text_paddingLeft(inp->text);
     inp->cursor_y = *Text_y(inp->text) + *Text_marginTop(inp->text) + *Text_borderTop(inp->text) + *Text_paddingTop(inp->text);
-    if(*Text_raw(inp->text) && inp->cursor_idx){
+    if(chrs_dest && inp->cursor_idx){
         inp->cursor_x = chrs_dest[inp->cursor_idx - 1].x + chrs_dest[inp->cursor_idx - 1].width - 1;
         inp->cursor_y = chrs_dest[inp->cursor_idx - 1].y;
+        // printf("(%i %i) (%.2lf %.2lf)\n", inp->cursor_x, inp->cursor_y, *Text_x(inp->text), *Text_y(inp->text));
     }
 
-    // printf("%i %i\n", DRAW_EDGE_XMAX
     if(
         inp->cursor_x >= (*Text_edges(inp->text))[DRAW_EDGE_XMAX]
         || inp->cursor_y >= (*Text_edges(inp->text))[DRAW_EDGE_YMAX]
@@ -94,32 +199,7 @@ void TextInput_displayCursor(TextInput*inp)
         return;
     }
 
-    //*
-    if(!inp->cursor_tex){
-        inp->cursor_tex = SDL_CreateTexture(
-            r,
-            SDL_PIXELFORMAT_RGBA8888,
-            SDL_TEXTUREACCESS_TARGET,
-            2,
-            *Text_lineskip(inp->text) * *Text_scaleHeight(inp->text)
-        );
-        if(!inp->cursor_tex){
-            printf("Error while creating texture for cursor: %s\n", SDL_GetError());
-            exit(1);
-        }
-
-        SDL_SetRenderTarget(r, inp->cursor_tex);
-        SDL_SetRenderDrawColor(
-            r,
-            0,
-            0,
-            0,
-            255
-        );
-        SDL_RenderClear(r);
-        SDL_SetRenderTarget(r, NULL);
-    }
-
+    // printf("%li\n", inp->cursor_idx);
     dest = (SDL_Rect){
         .x = inp->cursor_x,
         .y = inp->cursor_y
@@ -194,6 +274,10 @@ void TextInput_handleKeyDown(TextInput*inp, SDL_Event*e)
             TextInput_handleTextInput(inp, e, "\n");
             break;
 
+        case SDLK_TAB:
+            TextInput_handleTextInput(inp, e, "    ");
+            break;
+
         default:
             break;
     }
@@ -208,33 +292,38 @@ void TextInput_handleTextInput(TextInput*inp, SDL_Event*e, char*str)
 {
     char *byte_raw;
     char *byte_str;
+    char *byte_inp;
     int c, c_inp;
-    size_t i;
+    size_t i, nw_cursorIdx;
     //
-    c = '\0';
+    TI_str[0] = c = '\0';
     byte_raw = (*Text_raw(inp->text))? utf8codepoint(*Text_raw(inp->text), &c): NULL;
     byte_str = TI_str;
-    utf8codepoint(str, &c_inp);
+    byte_inp = utf8codepoint(str, &c_inp);
     i = 0;
+    nw_cursorIdx = inp->cursor_idx;
     do{
-        //*
-        if(c != '\0' && inp->cursor_idx){
+        if(inp->cursor_idx && c != '\0'){
             byte_str = utf8catcodepoint(byte_str, c, sizeof(TI_str) - (size_t)(byte_str - TI_str));
         }
         if(
            (!inp->cursor_idx && i == inp->cursor_idx)
            || (inp->cursor_idx && i == inp->cursor_idx - 1)
         ){
-            byte_str = utf8catcodepoint(byte_str, c_inp, sizeof(TI_str) - (size_t)(byte_str - TI_str));
+            while(c_inp != '\0'){
+                byte_str = utf8catcodepoint(byte_str, c_inp, sizeof(TI_str) - (size_t)(byte_str - TI_str));
+                byte_inp = utf8codepoint(byte_inp, &c_inp);
+                ++nw_cursorIdx;
+            }
         }
-        if(c != '\0' && !inp->cursor_idx){
+        if(!inp->cursor_idx && c != '\0'){
             byte_str = utf8catcodepoint(byte_str, c, sizeof(TI_str) - (size_t)(byte_str - TI_str));
         }
-        // */
+        // byte_raw = utf8codepoint(byte_raw, &c);
         ++i;
     } while(c != '\0' && (byte_raw = utf8codepoint(byte_raw, &c)));
+    inp->cursor_idx = nw_cursorIdx;
     Text_SetUTF8(inp->text, TI_str);
-    inp->cursor_idx++;
 }
 
 void TextInput_checkInput(TextInput*inp, SDL_Event*e)
@@ -255,13 +344,187 @@ void TextInput_checkInput(TextInput*inp, SDL_Event*e)
 //
 // Bar
 //
-typedef struct InputBar InputBar;
-struct InputBar {
-    int r_min, r_max;
+typedef struct BarInput BarInput;
+struct BarInput {
+    int rg_min, rg_max;
     int w, h;
-    int bar_x, bar_y;
-};
+    int bar_w, bar_h;
+    int selected;
 
+    SDL_Color c_init, c_end;
+    SDL_Renderer *r;
+    Text *tex;
+};
+char BarInput_buffer[10];
+SDL_Color *BarInput_buffer_bi_cInit, *BarInput_buffer_bi_cEnd ;
+
+BarInput* BarInput_Create(SDL_Renderer*, TextCache*, int min, int max, int w, int h, SDL_Color, SDL_Color);
+void BarInput_Destroy(BarInput**);
+void BarInput_Display(BarInput*, int x, int y);
+double BarInput_GetVal(BarInput*);
+
+void BarInput_handleMouseButtonDown(BarInput*, SDL_Event*);
+void BarInput_alterBorder(Text*, Texture*);
+
+
+BarInput* BarInput_Create(
+    SDL_Renderer*r, TextCache*cache,
+    int min, int max
+    , int w, int h,
+    SDL_Color c_init, SDL_Color c_end
+    )
+{
+    BarInput *bi;
+
+    bi = malloc(sizeof(BarInput));
+    bi->rg_min = min;
+    bi->rg_max = max;
+    bi->w = bi->bar_w = w;
+    bi->h = bi->bar_h = h;
+    bi->selected = 0;
+    bi->c_init = c_init;
+    bi->c_end = c_end;
+
+    size_t i;
+    double rate;
+    bi->r = r;
+    bi->tex = Text_Create(
+        cache,
+        TextConfig_Create(
+            .scale_width = 1 / 3.6,
+            .scale_height = 1 / 3.6,
+            .margin = (Margin){
+                .top = 2,
+                .bottom = 2,
+                .right = 2,
+                .left = 2,
+                .color = (SDL_Color){.a=255}
+            },
+            .border = (Border){
+                .left = w,
+                .top = h,
+            },
+            .padding = (Padding){
+                .color = (SDL_Color){.r=255, .g=255, .b=255, .a=255}
+            },
+
+            .func_alterBorder = &BarInput_alterBorder
+        ),
+        NULL
+    );
+    return bi;
+}
+
+void BarInput_Destroy(BarInput**bi)
+{
+    Text_Destroy(&(*bi)->tex);
+    free(*bi);
+    *bi = NULL;
+}
+
+void BarInput_Display(BarInput*bi, int x, int y)
+{
+    BarInput_buffer[0] = '\0';
+    sprintf(BarInput_buffer, "%.0lf", BarInput_GetVal(bi));
+
+    BarInput_buffer_bi_cInit = &bi->c_init;
+    BarInput_buffer_bi_cEnd = &bi->c_end;
+    Text_DrawUTF8(
+        bi->tex,
+        BarInput_buffer,
+        TextConfig_Create(
+            .x = x,
+            .y = y
+        ),
+        NULL
+    );
+}
+
+double BarInput_GetVal(BarInput*bi)
+{
+    return bi->bar_w / (double)bi->w * (bi->rg_max - bi->rg_min) + bi->rg_min;
+}
+
+void BarInput_handleMouseButtonDown(BarInput*bi, SDL_Event*e)
+{
+    if(e->type != SDL_MOUSEBUTTONDOWN && e->type != SDL_MOUSEBUTTONUP){
+        return;
+    }
+
+    int x, y;
+    x = e->button.x;
+    y = e->button.y;
+
+    bi->selected = 
+        x >= (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_XMIN] && x <= (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_XMAX]
+        && y >= (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_YMIN] && y <= (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_YMAX]
+        ;
+    if(e->type == SDL_MOUSEBUTTONUP && bi->selected){
+        bi->selected = 0;
+    }
+}
+
+void BarInput_handleMouseMotion(BarInput*bi, SDL_Event*e)
+{
+    if((e->type != SDL_MOUSEMOTION && e->type != SDL_MOUSEBUTTONDOWN) || !bi->selected){
+        return;
+    }
+
+    int x, y;
+
+    x = (e->type == SDL_MOUSEMOTION)? e->motion.x: e->button.x;
+    y = (e->type == SDL_MOUSEMOTION)? e->motion.y: e->button.y;
+    if(bi->selected){
+        *Text_borderLeft(bi->tex) = MIN(MAX(x - (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_XMIN], 0), bi->w);
+        *Text_paddingLeft(bi->tex) = MIN(MAX((*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMIN] - x, 0), bi->w);
+        *Text_paddingTop(bi->tex) = bi->h;
+        *Text_borderTop(bi->tex) = 0;
+    }
+    if(bi->selected && !*Text_paddingLeft(bi->tex)){
+        *Text_borderTop(bi->tex) = bi->h;
+        *Text_paddingTop(bi->tex) = 0;
+    }
+    bi->bar_w = *Text_borderLeft(bi->tex);
+    bi->bar_h = bi->h;
+}
+
+void BarInput_alterBorder(Text*t, Texture*tex)
+{
+    int w, h;
+    size_t i;
+    double rate;
+    
+    SDL_QueryTexture(
+        *Texture_raw(tex),
+        NULL, NULL,
+        &w, &h
+    );
+
+    SDL_SetRenderDrawColor(
+        *Texture_renderer(tex),
+        255, 255, 255, 255
+    );
+    SDL_RenderClear(*Texture_renderer(tex));
+    for(i=0; i < *Text_borderLeft(t); ++i){
+        rate = (double)(i + 1) / w;
+        
+        SDL_SetRenderDrawColor(
+            *Texture_renderer(tex),
+            BarInput_buffer_bi_cInit->r + rate * (BarInput_buffer_bi_cEnd->r - BarInput_buffer_bi_cInit->r),
+            BarInput_buffer_bi_cInit->g + rate * (BarInput_buffer_bi_cEnd->g - BarInput_buffer_bi_cInit->g),
+            BarInput_buffer_bi_cInit->b + rate * (BarInput_buffer_bi_cEnd->b - BarInput_buffer_bi_cInit->b),
+            BarInput_buffer_bi_cInit->a + rate * (BarInput_buffer_bi_cEnd->a - BarInput_buffer_bi_cInit->a)
+        );
+
+        SDL_RenderDrawLine(
+            *Texture_renderer(tex),
+            i,
+            0,
+            i,
+            h
+        );
+    }
+}
 
 //
 // Button
@@ -280,6 +543,19 @@ SDL_Rect src_buttonMedium_unselected = (SDL_Rect){
     .h = 1017 - 541
 };
 int t_selected;
+
+//
+// Alter margin
+//
+void alterMargin_1(Text*t, Texture*tex)
+{
+    SDL_RenderCopy(
+        *Text_renderer(t),
+        t_marginTex,
+        (!t_selected)? &src_buttonMedium_unselected: &src_buttonMedium_selected,
+        NULL
+    );
+}
 
 //
 // Gradient square
@@ -358,19 +634,6 @@ void draw_gradient_square(
 }
 
 //
-// Alter margin
-//
-void alterMargin_1(Text*t, Texture*tex)
-{
-    SDL_RenderCopy(
-        *Text_renderer(t),
-        t_marginTex,
-        (!t_selected)? &src_buttonMedium_unselected: &src_buttonMedium_selected,
-        NULL
-    );
-}
-
-//
 void Text_Test4(char*fpath, unsigned ptsize, char*str)
 {
     extern SDL_Window *w;
@@ -394,9 +657,12 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
     char fps_tStr[20] = "FPS 60.00";
     int fps_edges[DRAW_EDGE_AMT] = {};
     //
-    TextInput input_text;
+    TextInput *input_text;
+    TextInput *inp1, *inp2, *inp3;
     TextConfig input_configUnselected, input_configSelected;
-    TextConfig *input_config;
+    //
+    BarInput *bi_cInitR, *bi_cInitG, *bi_cInitB;
+    BarInput *bi_cEndR, *bi_cEndG, *bi_cEndB;
     //
     int rect_w, rect_h;
     int rect_colorCenterX, rect_colorCenterY;
@@ -490,13 +756,65 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         .left = 5,
         .color = (SDL_Color){.a=255}
     };
-    input_text = (TextInput){};
-    input_text.text = Text_Create(cache, &input_configUnselected);
-    Text_SetUTF8(input_text.text, "Type anything here!");
+    input_text = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "Type anything into any of theses boxes!");
+    inp1 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "");
+    inp2 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "");
+    inp3 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "");
     //
     rect_w = 300;
     rect_h = 300;
     rect_colorCenterX = rect_colorCenterY = 0;
+    //
+    bi_cInitR = BarInput_Create(
+        r,
+        cache,
+        0, 255,
+        150, 10,
+        (SDL_Color){.r=255, .g=255, .b=255, .a=255},
+        (SDL_Color){.r=255, .g=0, .b=0, .a=255}
+    );
+    bi_cInitG = BarInput_Create(
+        r,
+        cache,
+        0, 255,
+        150, 10,
+        (SDL_Color){.r=255, .g=255, .b=255, .a=255},
+        (SDL_Color){.r=0, .g=255, .b=0, .a=255}
+    );
+    bi_cInitB = BarInput_Create(
+        r,
+        cache,
+        0, 255,
+        150, 10,
+        (SDL_Color){.r=255, .g=255, .b=255, .a=255},
+        (SDL_Color){.r=0, .g=0, .b=255, .a=255}
+    );
+
+    bi_cEndR = BarInput_Create(
+        r,
+        cache,
+        0, 255,
+        150, 10,
+        (SDL_Color){.r=255, .g=255, .b=255, .a=255},
+        (SDL_Color){.r=255, .g=0, .b=0, .a=255}
+    );
+    bi_cEndG = BarInput_Create(
+        r,
+        cache,
+        0, 255,
+        150, 10,
+        (SDL_Color){.r=255, .g=255, .b=255, .a=255},
+        (SDL_Color){.r=0, .g=255, .b=0, .a=255}
+    );
+    bi_cEndB = BarInput_Create(
+        r,
+        cache,
+        0, 255,
+        150, 10,
+        (SDL_Color){.r=255, .g=255, .b=255, .a=255},
+        (SDL_Color){.r=0, .g=0, .b=255, .a=255}
+    );
+
 
     while(1){
         if(SDL_GetTicks() - fps_delayTime >= fps_delay){
@@ -505,16 +823,50 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         }
 
         while(SDL_PollEvent(&e)){
-            TextInput_checkSelection(&input_text, &e);
-            //
-            TextInput_checkInput(&input_text, &e);
+            // TextInput
+            TextInput_checkSelection(input_text, &e);
+            TextInput_checkSelection(inp1, &e);
+            TextInput_checkSelection(inp2, &e);
+            TextInput_checkSelection(inp3, &e);
 
+            TextInput_checkInput(input_text, &e);
+            TextInput_checkInput(inp1, &e);
+            TextInput_checkInput(inp2, &e);
+            TextInput_checkInput(inp3, &e);
+            // BarInput
+            BarInput_handleMouseButtonDown(bi_cInitR, &e);
+            BarInput_handleMouseButtonDown(bi_cInitG, &e);
+            BarInput_handleMouseButtonDown(bi_cInitB, &e);
+            BarInput_handleMouseButtonDown(bi_cEndR, &e);
+            BarInput_handleMouseButtonDown(bi_cEndG, &e);
+            BarInput_handleMouseButtonDown(bi_cEndB, &e);
+
+            BarInput_handleMouseMotion(bi_cInitR, &e);
+            BarInput_handleMouseMotion(bi_cInitG, &e);
+            BarInput_handleMouseMotion(bi_cInitB, &e);
+            BarInput_handleMouseMotion(bi_cEndR, &e);
+            BarInput_handleMouseMotion(bi_cEndG, &e);
+            BarInput_handleMouseMotion(bi_cEndB, &e);
+
+            //
             switch(e.type){
                 case SDL_QUIT:
                     SDL_DestroyTexture(t_marginTex);
                     //
                     Text_Destroy(&t);
                     Text_Destroy(&fps_t);
+                    //
+                    TextInput_Destroy(&input_text);
+                    TextInput_Destroy(&inp1);
+                    TextInput_Destroy(&inp2);
+                    TextInput_Destroy(&inp3);
+                    //
+                    BarInput_Destroy(&bi_cInitR);
+                    BarInput_Destroy(&bi_cInitG);
+                    BarInput_Destroy(&bi_cInitB);
+                    BarInput_Destroy(&bi_cEndR);
+                    BarInput_Destroy(&bi_cEndG);
+                    BarInput_Destroy(&bi_cEndB);
                     //
                     SDL_DestroyRenderer(r);
                     SDL_DestroyWindow(w);
@@ -551,6 +903,12 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
         SDL_RenderClear(r);
         SDL_GetWindowSize(w, &w_width, &w_height);
+        //* Input boxes
+        TextInput_Display(input_text, 0, 0);
+        TextInput_Display(inp1, 0, (*Text_edges(input_text->text))[DRAW_EDGE_YMAX]);
+        TextInput_Display(inp2, MAX((*Text_edges(input_text->text))[DRAW_EDGE_XMAX], (*Text_edges(inp1->text))[DRAW_EDGE_XMAX]), 0);
+        TextInput_Display(inp3, MAX((*Text_edges(input_text->text))[DRAW_EDGE_XMAX], (*Text_edges(inp1->text))[DRAW_EDGE_XMAX]), (*Text_edges(inp2->text))[DRAW_EDGE_YMAX]);
+        // */
         //* Gradient square
         draw_gradient_square(
             (SDL_Point){
@@ -559,8 +917,18 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             },
             rect_w,
             rect_h,
-            (SDL_Color){.r=255, .a=255},
-            (SDL_Color){.b=255, .a=255},
+            (SDL_Color){
+                .r=BarInput_GetVal(bi_cInitR),
+                .g=BarInput_GetVal(bi_cInitG),
+                .b=BarInput_GetVal(bi_cInitB),
+                .a=255
+            },
+            (SDL_Color){
+                .r=BarInput_GetVal(bi_cEndR),
+                .g=BarInput_GetVal(bi_cEndG),
+                .b=BarInput_GetVal(bi_cEndB),
+                .a=255
+            },
             (SDL_Point){
                 .x = rect_colorCenterX,
                 .y = rect_colorCenterY
@@ -599,18 +967,15 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             &t_edges
         );
         // */
-        //* Input boxes
-        input_config = (input_text.selected)? &input_configSelected: &input_configUnselected;
-        Text_DrawUTF8(
-            input_text.text,
-            NULL,
-            input_config,
-            NULL
-        );
-        if(*Text_chrsDest(input_text.text) && Text_GetSizeUTF8(input_text.text)){
-            input_config->bx_height = (*Text_chrsDest(input_text.text))[Text_GetSizeUTF8(input_text.text) - 1].y + (*Text_chrsDest(input_text.text))[Text_GetSizeUTF8(input_text.text) - 1].height;
-        }
-        TextInput_displayCursor(&input_text);
+        //* BarInputs
+        BarInput_Display(bi_cInitR, w_width - bi_cInitR->w - 50, 330);
+        BarInput_Display(bi_cInitG, w_width - bi_cInitG->w - 50, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_YMAX] + 5);
+        BarInput_Display(bi_cInitB, w_width - bi_cInitB->w - 50, (*Text_edges(bi_cInitG->tex))[DRAW_EDGE_YMAX] + 5);
+
+        BarInput_Display(bi_cEndR, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndR->w - 50, 330);
+        BarInput_Display(bi_cEndG, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndG->w - 50, (*Text_edges(bi_cEndR->tex))[DRAW_EDGE_YMAX] + 5);
+        BarInput_Display(bi_cEndB, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndB->w - 50, (*Text_edges(bi_cEndG->tex))[DRAW_EDGE_YMAX] + 5);
+        // */
 
         SDL_RenderPresent(r);
         SDL_Delay(16);
