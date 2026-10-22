@@ -3,11 +3,11 @@ project(text C)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 if(NOT ${compilation_mode} MATCHES "TOOLCHAIN")
-    set(CMAKE_C_COMPILER gcc)
+    set(CMAKE_C_COMPILER /usr/bin/gcc)
 elseif(${compilation_mode} MATCHES "TOOLCHAIN_WINDOWS")
     set(CMAKE_SYSTEM_NAME Windows)
-    set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
-    set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+    set(CMAKE_C_COMPILER /usr/bin/x86_64-w64-mingw32-gcc)
+    set(CMAKE_CXX_COMPILER /usr/bin/x86_64-w64-mingw32-g++)
     set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
     set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY ONLY)
     set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE ONLY)
@@ -101,5 +101,6 @@ elseif(${compilation_mode} STREQUAL TOOLCHAIN_WINDOWS_DEVQUOTE OR ${compilation_
 endif()
 
 # Add subdirectories
-add_subdirectory(library)
+add_subdirectory(libgraphical)
+# add_subdirectory(library)
 add_subdirectory(source)
