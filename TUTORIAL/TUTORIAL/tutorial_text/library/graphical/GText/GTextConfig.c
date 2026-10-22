@@ -38,8 +38,10 @@ int TextConfig_Equals(TextConfig*a, TextConfig*b)
         // && a->x == b->x
         // && a->y == b->y
         //
-        // && a->func_alterMargin == b->func_alterMargin
-        // && a->func_alterPadding == b->func_alter
+        && a->func_alterMargin == b->func_alterMargin
+        && a->func_alterBorder == b->func_alterBorder
+        && a->func_alterPadding == b->func_alterPadding
+        && a->func_alterText == b->func_alterText
         ;
 }
 

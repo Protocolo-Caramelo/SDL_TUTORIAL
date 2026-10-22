@@ -16,28 +16,28 @@ typedef enum DRAW_EDGES DRAW_EDGES;
 #define DRAW_EDGE_AMT 30
 enum DRAW_EDGES {
     DRAW_EDGE_XMAX,
-    DRAW_EDGE_XMIN,
     DRAW_EDGE_YMAX,
+    DRAW_EDGE_XMIN,
     DRAW_EDGE_YMIN,
 
     DRAW_EDGE_MARGIN_XMAX,
-    DRAW_EDGE_MARGIN_XMIN,
     DRAW_EDGE_MARGIN_YMAX,
+    DRAW_EDGE_MARGIN_XMIN,
     DRAW_EDGE_MARGIN_YMIN,
 
     DRAW_EDGE_BORDER_XMAX,
-    DRAW_EDGE_BORDER_XMIN,
     DRAW_EDGE_BORDER_YMAX,
+    DRAW_EDGE_BORDER_XMIN,
     DRAW_EDGE_BORDER_YMIN,
 
     DRAW_EDGE_PADDING_XMAX,
-    DRAW_EDGE_PADDING_XMIN,
     DRAW_EDGE_PADDING_YMAX,
+    DRAW_EDGE_PADDING_XMIN,
     DRAW_EDGE_PADDING_YMIN,
 
     DRAW_EDGE_TEXT_XMAX,
-    DRAW_EDGE_TEXT_XMIN,
     DRAW_EDGE_TEXT_YMAX,
+    DRAW_EDGE_TEXT_XMIN,
     DRAW_EDGE_TEXT_YMIN,
 
     DRAW_WIDTH,
@@ -51,7 +51,6 @@ enum DRAW_EDGES {
     DRAW_BORDER_HEIGHT,
     DRAW_PADDING_HEIGHT,
     DRAW_TEXT_HEIGHT,
-
 };
 
 /*
@@ -69,6 +68,7 @@ struct Text {
     TextConfig config;
     TextCharRect *chrs_dest;
     int edges[DRAW_EDGE_AMT];
+    int edges_client[DRAW_EDGE_AMT];
 
     int raw_changed;
     int config_changed;
@@ -131,7 +131,16 @@ WRAP_FIELD(Text, chrs_dest, chrsDest, TextCharRect*);
 WRAP_FIELD(Text, cache_text, textCache, SDL_Texture*);
 WRAP_FIELD(Text, cache_texture, cacheTexture, SDL_Texture*);
 
-static inline int (*Text_edges(Text*t))[DRAW_EDGE_AMT]
+void Text_CalculateCenterEdgesClient(
+    // int width, int height,
+    int cx, int cy,
+    int *xmin, int *xmax,
+    int *ymin, int *ymax,
+    double t_sin, double t_cos
+    );
+int (*Text_edges(Text*t))[DRAW_EDGE_AMT];
+
+static inline int (*Text_edgesBack(Text*t))[DRAW_EDGE_AMT]
 {
     return &t->edges;
 }

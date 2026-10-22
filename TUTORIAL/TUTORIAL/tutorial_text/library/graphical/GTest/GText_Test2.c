@@ -179,6 +179,7 @@ void Text_Test2(char*fpath, unsigned ptsize, char*str)
             &t_edges
         );
         // */
+        // printf("%i %.2lf\n", (*Text_edges(t))[DRAW_EDGE_XMIN], *Text_x(t));
         //*
         Text_DrawUTF8(
             t,

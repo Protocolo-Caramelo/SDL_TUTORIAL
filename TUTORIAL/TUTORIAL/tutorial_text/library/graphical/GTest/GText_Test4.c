@@ -296,7 +296,8 @@ void TextInput_handleTextInput(TextInput*inp, SDL_Event*e, char*str)
     int c, c_inp;
     size_t i, nw_cursorIdx;
     //
-    TI_str[0] = c = '\0';
+    memset(TI_str, 0, sizeof(TI_str) / sizeof(TI_str[0]));
+    c = '\0';
     byte_raw = (*Text_raw(inp->text))? utf8codepoint(*Text_raw(inp->text), &c): NULL;
     byte_str = TI_str;
     byte_inp = utf8codepoint(str, &c_inp);
@@ -338,6 +339,31 @@ void TextInput_checkInput(TextInput*inp, SDL_Event*e)
 
     if(e->type == SDL_TEXTINPUT){
         TextInput_handleTextInput(inp, e, e->text.text);
+    }
+}
+
+
+static int alterText_mouseX, alterText_mouseY;
+static double distX, distY, dist;
+static double alterText_sin, alterText_cos, alterText_angle;
+static int alterText_relativeX, alterText_relativeY;
+void TextInput_alterText(Text*t, TextChar*c)
+{
+    if(c->chr_textIdx){
+        distX = distY = dist = 0;
+        alterText_sin = alterText_cos = alterText_angle = 0;
+    }
+    distX = c->x - alterText_mouseX + alterText_relativeX;
+    distY = c->y - alterText_mouseY + alterText_relativeY;
+    dist = sqrt(distX * distX + distY * distY);
+
+    alterText_sin = distX / dist;
+    alterText_cos = distY / dist;
+    alterText_angle = atan2(-alterText_sin, alterText_cos);
+
+    c->rotation = 0;
+    if(dist == dist){
+        c->rotation = alterText_angle;
     }
 }
 
@@ -408,7 +434,8 @@ BarInput* BarInput_Create(
                 .color = (SDL_Color){.r=255, .g=255, .b=255, .a=255}
             },
 
-            .func_alterBorder = &BarInput_alterBorder
+            .func_alterBorder = &BarInput_alterBorder,
+            .bx_width = 50
         ),
         NULL
     );
@@ -445,6 +472,21 @@ double BarInput_GetVal(BarInput*bi)
     return bi->bar_w / (double)bi->w * (bi->rg_max - bi->rg_min) + bi->rg_min;
 }
 
+void BarInput_SetVaL(BarInput*bi, int val)
+{
+    *Text_borderLeft(bi->tex) = MIN(MAX((val - bi->rg_min) / (double)bi->rg_max * bi->w, 0), bi->w);
+    *Text_paddingLeft(bi->tex) = bi->w - *Text_borderLeft(bi->tex);
+
+    *Text_borderTop(bi->tex) = bi->h;
+    *Text_paddingTop(bi->tex) = 0;
+    if(*Text_borderLeft(bi->tex)){
+        *Text_paddingTop(bi->tex) = bi->h;
+        *Text_borderTop(bi->tex) = 0;
+    }
+    bi->bar_w = *Text_borderLeft(bi->tex);
+    bi->bar_h = bi->h;
+}
+
 void BarInput_handleMouseButtonDown(BarInput*bi, SDL_Event*e)
 {
     if(e->type != SDL_MOUSEBUTTONDOWN && e->type != SDL_MOUSEBUTTONUP){
@@ -462,6 +504,15 @@ void BarInput_handleMouseButtonDown(BarInput*bi, SDL_Event*e)
     if(e->type == SDL_MOUSEBUTTONUP && bi->selected){
         bi->selected = 0;
     }
+    /*
+    printf(
+        "(%i %i) (%i %i)\n",
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMIN],
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMAX],
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_YMIN],
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_YMAX]
+    );
+    // */
 }
 
 void BarInput_handleMouseMotion(BarInput*bi, SDL_Event*e)
@@ -471,15 +522,43 @@ void BarInput_handleMouseMotion(BarInput*bi, SDL_Event*e)
     }
 
     int x, y;
+    //
+    double t_sin, t_cos;
+    int r_x, r_y;
+    int r_xBorder, r_xPadding;
 
     x = (e->type == SDL_MOUSEMOTION)? e->motion.x: e->button.x;
     y = (e->type == SDL_MOUSEMOTION)? e->motion.y: e->button.y;
+    //
+    t_sin = sin(DEG_TO_RAD(*Text_rotation(bi->tex)));
+    t_cos = cos(DEG_TO_RAD(*Text_rotation(bi->tex)));
+    //
+    r_x = x * t_cos + y * t_sin;
+    r_y = y * t_cos + x * t_sin;
+    r_xBorder =
+        (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_XMIN] * t_cos
+        + (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_YMIN] * t_sin;
+    r_xPadding = 
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMIN] * t_cos
+        + (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_YMIN] * t_sin;
     if(bi->selected){
-        *Text_borderLeft(bi->tex) = MIN(MAX(x - (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_XMIN], 0), bi->w);
-        *Text_paddingLeft(bi->tex) = MIN(MAX((*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMIN] - x, 0), bi->w);
+        *Text_borderLeft(bi->tex) = MIN(MAX(r_x - r_xBorder, 0), bi->w);
+        // *Text_borderLeft(bi->tex) = MIN(MAX(r_xBorder - r_x, 0), bi->w);
+        *Text_paddingLeft(bi->tex) = bi->w - *Text_borderLeft(bi->tex);
         *Text_paddingTop(bi->tex) = bi->h;
         *Text_borderTop(bi->tex) = 0;
     }
+    // printf("%i (%i %i) (%i %i)\n", r_x, r_xPadding, r_xBorder, MIN(MAX(r_xPadding - r_x, 0), bi->w), MIN(MAX(r_x - r_xBorder, 0), bi->w));
+    // printf("%i %i\n", (*Text_edges(bi->tex))[DRAW_EDGE_BORDER_XMIN], (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMIN]);
+    /*
+    printf(
+        "(%i %i) (%i %i)\n",
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMIN],
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_XMAX],
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_YMIN],
+        (*Text_edges(bi->tex))[DRAW_EDGE_TEXT_YMAX]
+    );
+    // */
     if(bi->selected && !*Text_paddingLeft(bi->tex)){
         *Text_borderTop(bi->tex) = bi->h;
         *Text_paddingTop(bi->tex) = 0;
@@ -661,8 +740,13 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
     TextInput *inp1, *inp2, *inp3;
     TextConfig input_configUnselected, input_configSelected;
     //
+    TextConfig caption_config;
+    Text *caption_biCInit, *caption_biCEnd;
+    Text *caption_r, *caption_g, *caption_b;
     BarInput *bi_cInitR, *bi_cInitG, *bi_cInitB;
     BarInput *bi_cEndR, *bi_cEndG, *bi_cEndB;
+    //
+    BarInput *bi_rectWidth, *bi_rectHeight;
     //
     int rect_w, rect_h;
     int rect_colorCenterX, rect_colorCenterY;
@@ -674,7 +758,7 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         SDL_WINDOWPOS_UNDEFINED,
         SDL_WINDOWPOS_UNDEFINED,
         1024,
-        512,
+        600,
         SDL_WINDOW_RESIZABLE
     );
     r = SDL_CreateRenderer(
@@ -747,7 +831,7 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         },
         .bx_width = 200,
         .bx_height = TTF_FontLineSkip(*TextCache_font(cache)) / 3.6,
-        .wrap = 200
+        .wrap = 200,
     );
     input_configSelected.margin = (TextSpacing){
         .top = 5,
@@ -756,10 +840,10 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         .left = 5,
         .color = (SDL_Color){.a=255}
     };
-    input_text = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "Type anything into any of theses boxes!");
-    inp1 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "");
-    inp2 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "");
-    inp3 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "");
+    input_text = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^");
+    inp1 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "//////////////////////////////////////////////////////");
+    inp2 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+    inp3 = TextInput_Create(r, cache, &input_configUnselected, &input_configSelected, "<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<");
     //
     rect_w = 300;
     rect_h = 300;
@@ -789,6 +873,9 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         (SDL_Color){.r=255, .g=255, .b=255, .a=255},
         (SDL_Color){.r=0, .g=0, .b=255, .a=255}
     );
+    BarInput_SetVaL(bi_cInitR, 0);
+    BarInput_SetVaL(bi_cInitG, 0);
+    BarInput_SetVaL(bi_cInitB, 0);
 
     bi_cEndR = BarInput_Create(
         r,
@@ -814,6 +901,55 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         (SDL_Color){.r=255, .g=255, .b=255, .a=255},
         (SDL_Color){.r=0, .g=0, .b=255, .a=255}
     );
+        
+    caption_config = *TextConfig_Create(
+        .scale_width = 1 / 3.6,
+        .scale_height = 1 / 3.6,
+        .chr_fmt = CHAR_FMT_UNDERLINE | CHAR_FMT_BOLD,
+    );
+    caption_biCInit = Text_Create(
+        cache,
+        &caption_config,
+        "Gradient\ncenter color"
+    );
+    caption_biCEnd = Text_Create(
+        cache,
+        &caption_config,
+        "Gradient\nedge color"
+    );
+    caption_r = Text_Create(
+        cache,
+        &caption_config,
+        "R"
+    );
+    caption_g = Text_Create(
+        cache,
+        &caption_config,
+        "G"
+    );
+    caption_b = Text_Create(
+        cache,
+        &caption_config,
+        "B"
+    );
+    //
+    bi_rectWidth = BarInput_Create(
+        r,
+        cache,
+        0, rect_w,
+        rect_w - 55, 5,
+        (SDL_Color){.r=122,.g=122,.b=122,.a=255},
+        (SDL_Color){.r=122,.g=122,.b=122,.a=255}
+    );
+    bi_rectHeight = BarInput_Create(
+        r,
+        cache,
+        0, rect_h,
+        rect_h - 50, 5,
+        (SDL_Color){.r=122,.g=122,.b=122,.a=255},
+        (SDL_Color){.r=122,.g=122,.b=122,.a=255}
+    );
+    *Text_rotation(bi_rectHeight->tex) = 90;
 
 
     while(1){
@@ -823,6 +959,7 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
         }
 
         while(SDL_PollEvent(&e)){
+            //*
             // TextInput
             TextInput_checkSelection(input_text, &e);
             TextInput_checkSelection(inp1, &e);
@@ -840,6 +977,9 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             BarInput_handleMouseButtonDown(bi_cEndR, &e);
             BarInput_handleMouseButtonDown(bi_cEndG, &e);
             BarInput_handleMouseButtonDown(bi_cEndB, &e);
+            //
+            BarInput_handleMouseButtonDown(bi_rectHeight, &e);
+            BarInput_handleMouseButtonDown(bi_rectWidth, &e);
 
             BarInput_handleMouseMotion(bi_cInitR, &e);
             BarInput_handleMouseMotion(bi_cInitG, &e);
@@ -847,6 +987,10 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             BarInput_handleMouseMotion(bi_cEndR, &e);
             BarInput_handleMouseMotion(bi_cEndG, &e);
             BarInput_handleMouseMotion(bi_cEndB, &e);
+            //
+            BarInput_handleMouseMotion(bi_rectHeight, &e);
+            BarInput_handleMouseMotion(bi_rectWidth, &e);
+            // */
 
             //
             switch(e.type){
@@ -855,6 +999,9 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
                     //
                     Text_Destroy(&t);
                     Text_Destroy(&fps_t);
+                    Text_Destroy(&caption_biCInit);
+                    Text_Destroy(&caption_biCEnd);
+                    TextCache_Destroy(&cache);
                     //
                     TextInput_Destroy(&input_text);
                     TextInput_Destroy(&inp1);
@@ -867,6 +1014,8 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
                     BarInput_Destroy(&bi_cEndR);
                     BarInput_Destroy(&bi_cEndG);
                     BarInput_Destroy(&bi_cEndB);
+                    //
+                    BarInput_Destroy(&bi_rectWidth);
                     //
                     SDL_DestroyRenderer(r);
                     SDL_DestroyWindow(w);
@@ -886,13 +1035,15 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
                     ){
                         t_selected = !t_selected;
                     }
+                    alterText_mouseX = rect_colorCenterX = e.button.x;
+                    alterText_mouseY = rect_colorCenterY = e.button.y;
                     //
 
                     break;
 
                 case SDL_MOUSEMOTION:
-                    rect_colorCenterX = e.motion.x;
-                    rect_colorCenterY = e.motion.y;
+                    alterText_mouseX = rect_colorCenterX = e.motion.x;
+                    alterText_mouseY = rect_colorCenterY = e.motion.y;
                     break;
 
                 default:
@@ -900,13 +1051,65 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             }
         }
 
+
         SDL_SetRenderDrawColor(r, 255, 255, 255, 255);
         SDL_RenderClear(r);
         SDL_GetWindowSize(w, &w_width, &w_height);
+        // printf("%i\n", (*Text_edgesBack(bi_rectHeight->tex))[DRAW_EDGE_TEXT_XMAX]);
+        //* FPS
+        Text_DrawUTF8(
+            fps_t,
+            fps_tStr,
+            TextConfig_Create(
+                .x = w_width - fps_edges[DRAW_TEXT_WIDTH],
+                .y = 0,
+            ),
+            &fps_edges
+        );
+        // */
         //* Input boxes
+        if(!t_selected){
+            input_text->tc_selected.func_alterText = 
+                input_text->tc_unselected.func_alterText = 
+
+                inp1->tc_selected.func_alterText = 
+                inp1->tc_unselected.func_alterText =
+
+                inp2->tc_selected.func_alterText = 
+                inp2->tc_unselected.func_alterText = 
+
+                inp3->tc_selected.func_alterText = 
+                inp3->tc_unselected.func_alterText = NULL;
+            alterText_mouseX = alterText_mouseY = 0;
+        }
+        else {
+            input_text->tc_selected.func_alterText = 
+                input_text->tc_unselected.func_alterText = 
+
+                inp1->tc_selected.func_alterText = 
+                inp1->tc_unselected.func_alterText =
+
+                inp2->tc_selected.func_alterText = 
+                inp2->tc_unselected.func_alterText = 
+
+                inp3->tc_selected.func_alterText = 
+                inp3->tc_unselected.func_alterText = TextInput_alterText;
+        }
+
+        alterText_relativeX = *Text_x(input_text->text);
+        alterText_relativeY = *Text_y(input_text->text);
         TextInput_Display(input_text, 0, 0);
+        //
+        alterText_relativeX = *Text_x(inp1->text);
+        alterText_relativeY = *Text_y(inp1->text);
         TextInput_Display(inp1, 0, (*Text_edges(input_text->text))[DRAW_EDGE_YMAX]);
+        //
+        alterText_relativeX = *Text_x(inp2->text);
+        alterText_relativeY = *Text_y(inp2->text);
         TextInput_Display(inp2, MAX((*Text_edges(input_text->text))[DRAW_EDGE_XMAX], (*Text_edges(inp1->text))[DRAW_EDGE_XMAX]), 0);
+        //
+        alterText_relativeX = *Text_x(inp3->text);
+        alterText_relativeY = *Text_y(inp3->text);
         TextInput_Display(inp3, MAX((*Text_edges(input_text->text))[DRAW_EDGE_XMAX], (*Text_edges(inp1->text))[DRAW_EDGE_XMAX]), (*Text_edges(inp2->text))[DRAW_EDGE_YMAX]);
         // */
         //* Gradient square
@@ -915,8 +1118,8 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
                 .x = (w_width - rect_w),
                 .y = fps_edges[DRAW_EDGE_TEXT_YMAX]
             },
-            rect_w,
-            rect_h,
+            BarInput_GetVal(bi_rectWidth),
+            BarInput_GetVal(bi_rectHeight),
             (SDL_Color){
                 .r=BarInput_GetVal(bi_cInitR),
                 .g=BarInput_GetVal(bi_cInitG),
@@ -935,24 +1138,13 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             }
         );
         // */
-        //* FPS
-        Text_DrawUTF8(
-            fps_t,
-            fps_tStr,
-            TextConfig_Create(
-                .x = w_width - fps_edges[DRAW_TEXT_WIDTH],
-                .y = 0,
-            ),
-            &fps_edges
-        );
-        // */
         //* Button
         Text_DrawUTF8(
             t,
             NULL,
             TextConfig_Create(
-                .x = w_width / 2 - t_edges[DRAW_WIDTH] / 2,
-                .y = w_height / 2 - t_edges[DRAW_HEIGHT] / 2,
+                .x = w_width / 2 - t_edges[DRAW_WIDTH] / 2 - 2 * t_selected,
+                .y = w_height / 2 - t_edges[DRAW_HEIGHT] / 2 - 2 * t_selected,
 
                 .chr_fmt = (!t_selected)? CHAR_FMT_BOLD: CHAR_FMT_BOLD | CHAR_FMT_UNDERLINE,
 
@@ -967,15 +1159,94 @@ void Text_Test4(char*fpath, unsigned ptsize, char*str)
             &t_edges
         );
         // */
-        //* BarInputs
-        BarInput_Display(bi_cInitR, w_width - bi_cInitR->w - 50, 330);
-        BarInput_Display(bi_cInitG, w_width - bi_cInitG->w - 50, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_YMAX] + 5);
-        BarInput_Display(bi_cInitB, w_width - bi_cInitB->w - 50, (*Text_edges(bi_cInitG->tex))[DRAW_EDGE_YMAX] + 5);
-
-        BarInput_Display(bi_cEndR, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndR->w - 50, 330);
-        BarInput_Display(bi_cEndG, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndG->w - 50, (*Text_edges(bi_cEndR->tex))[DRAW_EDGE_YMAX] + 5);
-        BarInput_Display(bi_cEndB, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndB->w - 50, (*Text_edges(bi_cEndG->tex))[DRAW_EDGE_YMAX] + 5);
+        //* Bar Rect Dimensios Inputs
+        bi_rectHeight->c_init = bi_rectWidth->c_init = (SDL_Color){
+            .r = BarInput_GetVal(bi_cInitR),
+            .g = BarInput_GetVal(bi_cInitG),
+            .b = BarInput_GetVal(bi_cInitB),
+            .a = 255
+        };
+        bi_rectHeight->c_end = bi_rectWidth->c_end = (SDL_Color){
+            .r = BarInput_GetVal(bi_cEndR),
+            .g = BarInput_GetVal(bi_cEndG),
+            .b = BarInput_GetVal(bi_cEndB),
+            .a = 255
+        };
         // */
+        BarInput_Display(
+            bi_rectHeight,
+            w_width - rect_w - rect_w / 1.75,
+            fps_edges[DRAW_EDGE_TEXT_YMAX] + rect_h / 2 - 20
+        );
+        BarInput_Display(
+            bi_rectWidth,
+            (*Text_edges(bi_rectHeight->tex))[DRAW_EDGE_XMAX],
+            (*Text_edges(bi_rectHeight->tex))[DRAW_EDGE_YMAX]
+        );
+        //* Bar Color Inputs
+        Text_DrawUTF8(
+            caption_biCInit,
+            NULL,
+            TextConfig_Create(
+                .x = (w_width - bi_cInitR->w - 60)  + bi_cInitR->w / 2 - (*Text_edges(caption_biCInit))[DRAW_WIDTH] / 2 + 15,
+                // .y = 330,
+                .y = (*Text_edges(bi_rectWidth->tex))[DRAW_EDGE_YMAX] + 15,
+                .wrap = 170
+            ),
+            NULL
+        );
+        BarInput_Display(bi_cInitR, w_width - bi_cInitR->w - 60, (*Text_edges(caption_biCInit))[DRAW_EDGE_YMAX] + 5);
+        BarInput_Display(bi_cInitG, w_width - bi_cInitG->w - 60, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_YMAX] + 5);
+        BarInput_Display(bi_cInitB, w_width - bi_cInitB->w - 60, (*Text_edges(bi_cInitG->tex))[DRAW_EDGE_YMAX] + 5);
+        // printf("%i %i\n", (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN], (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMAX]);
+
+        Text_DrawUTF8(
+            caption_biCEnd,
+            NULL,
+            TextConfig_Create(
+                .x = ((*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndR->w - 60)  + bi_cEndR->w / 2 - (*Text_edges(caption_biCEnd))[DRAW_WIDTH] / 2 + 15,
+                // .y = 330,
+                .y = (*Text_edges(bi_rectWidth->tex))[DRAW_EDGE_YMAX] + 15,
+                .wrap = 170
+            ),
+            NULL
+        );
+        BarInput_Display(bi_cEndR, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndR->w - 60, (*Text_edges(caption_biCEnd))[DRAW_EDGE_YMAX] + 5);
+        BarInput_Display(bi_cEndG, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndG->w - 60, (*Text_edges(bi_cEndR->tex))[DRAW_EDGE_YMAX] + 5);
+        BarInput_Display(bi_cEndB, (*Text_edges(bi_cInitR->tex))[DRAW_EDGE_XMIN] - bi_cEndB->w - 60, (*Text_edges(bi_cEndG->tex))[DRAW_EDGE_YMAX] + 5);
+
+        Text_DrawUTF8( // Caption R
+            caption_r,
+            NULL,
+            TextConfig_Create(
+                .x = (*Text_edges(bi_cEndR->tex))[DRAW_EDGE_XMIN] - (*Text_edges(caption_r))[DRAW_WIDTH] - 10,
+                .y = *Text_y(bi_cEndR->tex) + (*Text_edges(bi_cEndR->tex))[DRAW_HEIGHT] / 2 - (*Text_edges(caption_r))[DRAW_HEIGHT] / 2,
+                .color = (SDL_Color){.r=255,.a=255},
+            ),
+            NULL
+        );
+        Text_DrawUTF8( // Caption G
+            caption_g,
+            NULL,
+            TextConfig_Create(
+                .x = (*Text_edges(bi_cEndG->tex))[DRAW_EDGE_XMIN] - (*Text_edges(caption_r))[DRAW_WIDTH] - 10,
+                .y = *Text_y(bi_cEndG->tex) + (*Text_edges(bi_cEndG->tex))[DRAW_HEIGHT] / 2 - (*Text_edges(caption_r))[DRAW_HEIGHT] / 2,
+                .color = (SDL_Color){.g=255,.a=255},
+            ),
+            NULL
+        );
+        Text_DrawUTF8( // Caption B
+            caption_b,
+            NULL,
+            TextConfig_Create(
+                .x = (*Text_edges(bi_cEndB->tex))[DRAW_EDGE_XMIN] - (*Text_edges(caption_r))[DRAW_WIDTH] - 10,
+                .y = *Text_y(bi_cEndB->tex) + (*Text_edges(bi_cEndB->tex))[DRAW_HEIGHT] / 2 - (*Text_edges(caption_r))[DRAW_HEIGHT] / 2,
+                .color = (SDL_Color){.b=255,.a=255},
+            ),
+            NULL
+        );
+        // */
+
 
         SDL_RenderPresent(r);
         SDL_Delay(16);

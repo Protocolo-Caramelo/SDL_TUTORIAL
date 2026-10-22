@@ -1,6 +1,106 @@
 #include"GText.h"
 
 static int draw_xInit, draw_yInit;
+static double cx, cy;
+static double dx, dy;
+
+//
+// Attributes
+//
+void Text_CalculateCenterEdgesClient(
+    int cx, int cy,
+    int *xmin, int *xmax,
+    int *ymin, int *ymax,
+    double t_sin, double t_cos
+    )
+{
+    // cx = *xmin + w / 2.0;
+    // cy = *ymin + h / 2.0;
+    
+    dx = *xmin - cx;
+    dy = *ymin - cy;
+    *xmin = cx + (dx * t_cos - dy * t_sin);
+    *ymin = cy + (dx * t_sin + dy * t_cos);
+
+    dx = *xmax - cx;
+    dy = *ymax - cy;
+    *xmax = cx + (dx * t_cos - dy * t_sin);
+    *ymax = cy + (dx * t_sin + dy * t_cos);
+
+    if(*xmin > *xmax){
+        *xmin += *xmax;
+        *xmax = *xmin - *xmax;
+        *xmin -= *xmax;
+    }
+    if(*ymin > *ymax){
+        *ymin += *ymax;
+        *ymax = *ymin - *ymax;
+        *ymin -= *ymax;
+    }
+}
+
+
+int (*Text_edges(Text*t))[DRAW_EDGE_AMT]
+{
+    size_t i;
+    double t_cos, t_sin;
+
+    memcpy(t->edges_client, t->edges, sizeof(t->edges));
+    // Rotate
+    t_cos = cos(DEG_TO_RAD(*Text_rotation(t)));
+    t_sin = sin(DEG_TO_RAD(*Text_rotation(t)));
+    cx = t->edges_client[DRAW_WIDTH] / 2.0;
+    cy = t->edges_client[DRAW_HEIGHT] / 2.0;
+    Text_CalculateCenterEdgesClient(
+        // t->edges_client[DRAW_WIDTH], t->edges_client[DRAW_HEIGHT],
+        cx, cy,
+        &t->edges_client[DRAW_EDGE_XMIN], &t->edges_client[DRAW_EDGE_XMAX],
+        &t->edges_client[DRAW_EDGE_YMIN], &t->edges_client[DRAW_EDGE_YMAX],
+        t_sin, t_cos
+    );
+    //*
+    Text_CalculateCenterEdgesClient(
+        // t->edges_client[DRAW_WIDTH], t->edges_client[DRAW_HEIGHT],
+        cx, cy,
+        &t->edges_client[DRAW_EDGE_TEXT_XMIN], &t->edges_client[DRAW_EDGE_TEXT_XMAX],
+        &t->edges_client[DRAW_EDGE_TEXT_YMIN], &t->edges_client[DRAW_EDGE_TEXT_YMAX],
+        t_sin, t_cos
+    );
+    //*
+    Text_CalculateCenterEdgesClient(
+        // t->edges_client[DRAW_PADDING_WIDTH], t->edges_client[DRAW_PADDING_HEIGHT],
+        cx, cy,
+        &t->edges_client[DRAW_EDGE_PADDING_XMIN], &t->edges_client[DRAW_EDGE_PADDING_XMAX],
+        &t->edges_client[DRAW_EDGE_PADDING_YMIN], &t->edges_client[DRAW_EDGE_PADDING_YMAX],
+        t_sin, t_cos
+    );
+    Text_CalculateCenterEdgesClient(
+        // t->edges_client[DRAW_BORDER_WIDTH], t->edges_client[DRAW_BORDER_HEIGHT],
+        cx, cy,
+        &t->edges_client[DRAW_EDGE_BORDER_XMIN], &t->edges_client[DRAW_EDGE_BORDER_XMAX],
+        &t->edges_client[DRAW_EDGE_BORDER_YMIN], &t->edges_client[DRAW_EDGE_BORDER_YMAX],
+        t_sin, t_cos
+    );
+    Text_CalculateCenterEdgesClient(
+        // t->edges_client[DRAW_MARGIN_WIDTH], t->edges_client[DRAW_MARGIN_HEIGHT],
+        cx, cy,
+        &t->edges_client[DRAW_EDGE_MARGIN_XMIN], &t->edges_client[DRAW_EDGE_MARGIN_XMAX],
+        &t->edges_client[DRAW_EDGE_MARGIN_YMIN], &t->edges_client[DRAW_EDGE_MARGIN_YMAX],
+        t_sin, t_cos
+    );
+    // */
+    // printf(
+    //     "(%i %i) (%i %i)\n",
+    //     t->edges_client[DRAW_EDGE_TEXT_XMIN], t->edges_client[DRAW_EDGE_TEXT_XMAX],
+    //     t->edges_client[DRAW_EDGE_BORDER_XMIN], t->edges_client[DRAW_EDGE_BORDER_XMAX]
+    // );
+
+    for(i=DRAW_EDGE_XMAX; i <= DRAW_EDGE_TEXT_YMIN; ++i){
+        t->edges_client[i] += *Text_x(t) * (i % 2 == 0);
+        t->edges_client[i] += *Text_y(t) * (i % 2 == 1);
+    }
+    return &t->edges_client;
+}
 
 //
 // Properties
@@ -100,7 +200,7 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
     }
     *Text_chrsDest(t) = malloc(sizeof(TextCharRect) * Text_GetSizeUTF8(t));
     //
-    memset(*Text_edges(t), 0, sizeof((*Text_edges(t))[0]) * sizeof(*Text_edges(t)) / sizeof((*Text_edges(t))[0]));
+    memset(*Text_edgesBack(t), 0, sizeof((*Text_edgesBack(t))[0]) * sizeof(*Text_edgesBack(t)) / sizeof((*Text_edgesBack(t))[0]));
 
     //
     i = 0;
@@ -256,13 +356,13 @@ void Text_MeasureUTF8(Text*t, int*w, int*h)
     draw_edge_xSpacing = *Text_marginLeft(t) + *Text_borderLeft(t) + *Text_paddingLeft(t);
     draw_edge_ySpacing = *Text_marginTop(t) + *Text_borderTop(t) + *Text_paddingTop(t);
     //
-    (*Text_edges(t))[DRAW_EDGE_TEXT_XMAX] = cIns_xMax + *Text_x(t) + draw_edge_xSpacing;
-    (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN] = cIns_xMin + *Text_x(t) + draw_edge_xSpacing;
-    (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] = cIns_yMax + *Text_y(t) + draw_edge_ySpacing;
-    (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN] = cIns_yMin + *Text_y(t) + draw_edge_ySpacing;
+    (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMAX] = cIns_xMax + draw_edge_xSpacing;
+    (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMIN] = cIns_xMin + draw_edge_xSpacing;
+    (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMAX] = cIns_yMax + draw_edge_ySpacing;
+    (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMIN] = cIns_yMin + draw_edge_ySpacing;
     //
-    (*Text_edges(t))[DRAW_TEXT_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN];
-    (*Text_edges(t))[DRAW_TEXT_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN];
+    (*Text_edgesBack(t))[DRAW_TEXT_WIDTH]     = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMIN];
+    (*Text_edgesBack(t))[DRAW_TEXT_HEIGHT]    = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMIN];
     //
 }
 
@@ -281,8 +381,8 @@ void Text_MeasurePadding(Text*t, int*w, int*h)
         // printf("2: %p\n", *Text_chrsDest(t));
     }
     else {
-        t_width = (*Text_edges(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN];
-        t_height = (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN];
+        t_width = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMIN];
+        t_height = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMIN];
     }
 
     // printf("%i %i\n", t_width, t_height);
@@ -294,13 +394,13 @@ void Text_MeasurePadding(Text*t, int*w, int*h)
     }
     //*
 
-    (*Text_edges(t))[DRAW_EDGE_PADDING_XMAX] = (*Text_edges(t))[DRAW_EDGE_TEXT_XMAX] + *Text_paddingRight(t);
-    (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN] = (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN] - *Text_paddingLeft(t);
-    (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] = (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] + *Text_paddingBottom(t);
-    (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN] = (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN] - *Text_paddingTop(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMAX] = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMAX] + *Text_paddingRight(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMIN] = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMIN] - *Text_paddingLeft(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMAX] = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMAX] + *Text_paddingBottom(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMIN] = (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMIN] - *Text_paddingTop(t);
     //
-    (*Text_edges(t))[DRAW_PADDING_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_PADDING_XMAX] - (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN];
-    (*Text_edges(t))[DRAW_PADDING_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] - (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN];
+    (*Text_edgesBack(t))[DRAW_PADDING_WIDTH]     = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMIN];
+    (*Text_edgesBack(t))[DRAW_PADDING_HEIGHT]    = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMIN];
     // */
 }
 
@@ -314,13 +414,13 @@ void Text_MeasureBorder(Text*t, int*w, int*h)
         *h += *Text_borderTop(t) + *Text_borderBottom(t);
     }
 
-    (*Text_edges(t))[DRAW_EDGE_BORDER_XMAX] = (*Text_edges(t))[DRAW_EDGE_PADDING_XMAX] + *Text_borderRight(t);
-    (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN] = (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN] - *Text_borderLeft(t);
-    (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] = (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] + *Text_borderBottom(t);
-    (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN] = (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN] - *Text_borderTop(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMAX] = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMAX] + *Text_borderRight(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMIN] = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMIN] - *Text_borderLeft(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMAX] = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMAX] + *Text_borderBottom(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMIN] = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMIN] - *Text_borderTop(t);
     //
-    (*Text_edges(t))[DRAW_BORDER_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_BORDER_XMAX] - (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN];
-    (*Text_edges(t))[DRAW_BORDER_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] - (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN];
+    (*Text_edgesBack(t))[DRAW_BORDER_WIDTH]     = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMIN];
+    (*Text_edgesBack(t))[DRAW_BORDER_HEIGHT]    = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMIN];
 }
 
 void Text_MeasureMargin(Text*t, int*w, int*h)
@@ -332,14 +432,14 @@ void Text_MeasureMargin(Text*t, int*w, int*h)
     if(h){
         *h += *Text_marginTop(t) + *Text_marginBottom(t);
     }
-    (*Text_edges(t))[DRAW_EDGE_MARGIN_XMAX] = (*Text_edges(t))[DRAW_EDGE_BORDER_XMAX] + *Text_marginRight(t);
-    (*Text_edges(t))[DRAW_EDGE_MARGIN_XMIN] = (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN] - *Text_marginLeft(t);
-    (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX] = (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] + *Text_marginBottom(t);
-    (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN] = (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN] - *Text_marginTop(t);
-    // printf("A: %i %i\n", (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX], (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN]);
+    (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMAX] = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMAX] + *Text_marginRight(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMIN] = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMIN] - *Text_marginLeft(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMAX] = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMAX] + *Text_marginBottom(t);
+    (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMIN] = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMIN] - *Text_marginTop(t);
+    // printf("A: %i %i\n", (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMAX], (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMIN]);
     //
-    (*Text_edges(t))[DRAW_MARGIN_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_MARGIN_XMAX] - (*Text_edges(t))[DRAW_EDGE_MARGIN_XMIN];
-    (*Text_edges(t))[DRAW_MARGIN_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX] - (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN];
+    (*Text_edgesBack(t))[DRAW_MARGIN_WIDTH]     = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMIN];
+    (*Text_edgesBack(t))[DRAW_MARGIN_HEIGHT]    = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMIN];
 }
 
 
@@ -449,8 +549,8 @@ SDL_Texture* Text_GenTextureMargin(Text*t)
         Text_MeasureMargin(t, &m_w, &m_h);
     }
     else {
-        m_w = (*Text_edges(t))[DRAW_EDGE_MARGIN_XMAX] - (*Text_edges(t))[DRAW_EDGE_MARGIN_XMIN];
-        m_h = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX] - (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN];
+        m_w = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMIN];
+        m_h = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMIN];
     }
 
     return Text_GenTextureSpacing(t, m_w, m_h, Text_marginColor(t), *Text_fAlterMargin(t));
@@ -468,8 +568,8 @@ SDL_Texture* Text_GenTextureBorder(Text*t)
         Text_MeasureBorder(t, &b_w, &b_h);
     }
     else {
-        b_w = (*Text_edges(t))[DRAW_EDGE_BORDER_XMAX] - (*Text_edges(t))[DRAW_EDGE_BORDER_XMIN];
-        b_h = (*Text_edges(t))[DRAW_EDGE_BORDER_YMAX] - (*Text_edges(t))[DRAW_EDGE_BORDER_YMIN];
+        b_w = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_BORDER_XMIN];
+        b_h = (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_BORDER_YMIN];
     }
 
     return Text_GenTextureSpacing(t, b_w, b_h, Text_borderColor(t), *Text_fAlterBorder(t));
@@ -487,8 +587,8 @@ SDL_Texture* Text_GenTexturePadding(Text*t)
         Text_MeasurePadding(t, &p_w, &p_h);
     }
     else {
-        p_w = (*Text_edges(t))[DRAW_EDGE_PADDING_XMAX] - (*Text_edges(t))[DRAW_EDGE_PADDING_XMIN];
-        p_h = (*Text_edges(t))[DRAW_EDGE_PADDING_YMAX] - (*Text_edges(t))[DRAW_EDGE_PADDING_YMIN];
+        p_w = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_PADDING_XMIN];
+        p_h = (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_PADDING_YMIN];
     }
     // printf("%i %i\n", p_w, p_h);
 
@@ -520,8 +620,8 @@ SDL_Texture* Text_GenTextureUTF8(Text*t)
         *Texture_renderer(&tex),
         TEXT_TEXTURE_PIXELFORMAT,
         TEXT_TEXTURE_ACCESS,
-        (*Text_edges(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_XMIN],
-        (*Text_edges(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edges(t))[DRAW_EDGE_TEXT_YMIN]
+        (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_TEXT_XMIN],
+        (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_TEXT_YMIN]
     );
     if(!*Texture_raw(&tex)){
         GRAPHICAL_LOG_ERROR("Error while creating texture to Text in Text_GenTextureUTF8 function: %s\n", SDL_GetError());
@@ -648,8 +748,8 @@ Text* Text_Create_Core(TextCache*cache, TextConfig *tc, char *str)
     }
     //
     *Text_chrsDest(n_t) = NULL;
-    memset(*Text_edges(n_t), 0, sizeof(*Text_edges(n_t)));
-    // *Text_edges(n_t) = NULL;
+    memset(*Text_edgesBack(n_t), 0, sizeof(*Text_edgesBack(n_t)));
+    // *Text_edgesBack(n_t) = NULL;
     //
     *Text_config(n_t) = (TextConfig){
         .padding = (Padding){},
@@ -866,8 +966,11 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
             )
             && *Text_raw(t)
         )
-        || *Text_boxHeightText(t)
-        || *Text_boxWidthText(t)
+        ||
+        (
+            (*Text_boxHeightText(t) || *Text_boxWidthText(t))
+            && !*Text_raw(t)
+        )
     ){
         if(*Text_textCache(t) != NULL){
             SDL_DestroyTexture(*Text_textCache(t));
@@ -880,13 +983,13 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
 
     // Edges
     //*
-    (*Text_edges(t))[DRAW_EDGE_XMAX] = (*Text_edges(t))[DRAW_EDGE_MARGIN_XMAX];
-    (*Text_edges(t))[DRAW_EDGE_XMIN] = (*Text_edges(t))[DRAW_EDGE_MARGIN_XMIN];
-    (*Text_edges(t))[DRAW_EDGE_YMAX] = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX];
-    (*Text_edges(t))[DRAW_EDGE_YMIN] = (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN];
+    (*Text_edgesBack(t))[DRAW_EDGE_XMAX] = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMAX];
+    (*Text_edgesBack(t))[DRAW_EDGE_XMIN] = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_XMIN];
+    (*Text_edgesBack(t))[DRAW_EDGE_YMAX] = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMAX];
+    (*Text_edgesBack(t))[DRAW_EDGE_YMIN] = (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMIN];
     // */
-    (*Text_edges(t))[DRAW_WIDTH]     = (*Text_edges(t))[DRAW_EDGE_XMAX] - (*Text_edges(t))[DRAW_EDGE_XMIN];
-    (*Text_edges(t))[DRAW_HEIGHT]    = (*Text_edges(t))[DRAW_EDGE_YMAX] - (*Text_edges(t))[DRAW_EDGE_YMIN];
+    (*Text_edgesBack(t))[DRAW_WIDTH]     = (*Text_edgesBack(t))[DRAW_EDGE_XMAX] - (*Text_edgesBack(t))[DRAW_EDGE_XMIN];
+    (*Text_edgesBack(t))[DRAW_HEIGHT]    = (*Text_edgesBack(t))[DRAW_EDGE_YMAX] - (*Text_edgesBack(t))[DRAW_EDGE_YMIN];
 
     // Update Text_chrsDest
     size_t i;
@@ -999,7 +1102,7 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
             );
         }
 
-        // Border
+        //* Border
         if(*Text_borderCache(t) != NULL){
             SDL_QueryTexture(
                 *Text_borderCache(t),
@@ -1088,9 +1191,8 @@ void Text_DrawUTF8(Text*t, char*str, TextConfig *tc, int (*edges)[DRAW_EDGE_AMT]
         *Text_flip(t)
     );
     // */
-
     if(edges != NULL){
-        // printf("B: %i %i\n", (*Text_edges(t))[DRAW_EDGE_MARGIN_YMAX], (*Text_edges(t))[DRAW_EDGE_MARGIN_YMIN]);
+        // printf("B: %i %i\n", (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMAX], (*Text_edgesBack(t))[DRAW_EDGE_MARGIN_YMIN]);
         memcpy(*edges, *Text_edges(t), sizeof(*Text_edges(t)));
     }
 }

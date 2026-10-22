@@ -294,7 +294,7 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
         0
         | MARGIN_TOP | MARGIN_RIGHT | MARGIN_BOTTOM | MARGIN_LEFT
         | BORDER_TOP | BORDER_RIGHT | BORDER_BOTTOM | BORDER_LEFT
-        | PADDING_TOP | PADDING_RIGHT | PADDING_BOTTOM | PADDING_LEFT
+        // | PADDING_TOP | PADDING_RIGHT | PADDING_BOTTOM | PADDING_LEFT
     );
 
     while(1){
@@ -368,6 +368,8 @@ void Text_Test3(char*fpath, unsigned ptsize, char*str)
             t,
             str,
             TextConfig_Create(
+                .x = 0,
+                .y = 0,
                 .padding = t_padding,
                 .border = t_border,
                 .margin = t_margin,
